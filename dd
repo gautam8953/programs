@@ -1,0 +1,237 @@
+    function downloadAll($CertificationID=''){
+      $this->load->library('Pdf');
+      $html='';
+      $data=array();
+      $CertificationID=encryptor($CertificationID,'decrypt');
+      if(empty($CertificationID)){
+        redirect('/');
+      } else {
+        $fileLinks=array();
+        $data['data']=$this->CertificationModel->get_approvaledit($CertificationID);
+        $lrAssessmentID=$data['data']['main']['facilityPeerAssmentLR'];
+        $lrAssessmentFormat=$data['data']['main']['formatLR'];
+        $otAssessmentID=$data['data']['main']['facilityPeerAssmentOT'];
+        $otAssessmentFormat=$data['data']['main']['formatOT'];
+        // for uploaded files links started
+        // Application Form ended
+        if(!empty($data['data']['main']['appForm'])){ 
+          if(is_file($data['data']['main']['appForm'])){
+            $nameArr=explode('/', $data['data']['main']['appForm']);
+            $name=end($nameArr);
+            $fileLinks[$name]=base_url().$data['data']['main']['appForm'];
+          }
+        }
+        // Application Form ended
+        // LR sop started
+        if(!empty($data['data']['main']['lrsop'])){ 
+          if(is_file($data['data']['main']['lrsop'])){
+            $nameArr=explode('/', $data['data']['main']['appForm']);
+            $name=end($nameArr);
+            $fileLinks[$name]=base_url().$data['data']['main']['lrsop'];
+          }
+        }
+        // LR sop ended
+        // OT sop started
+        if(!empty($data['data']['main']['otsop'])){ 
+          if(is_file($data['data']['main']['otsop'])){
+            $nameArr=explode('/', $data['data']['main']['appForm']);
+            $name=end($nameArr);
+            $fileLinks[$name]=base_url().$data['data']['main']['otsop'];
+          }
+        }
+        // OT sop ended
+        // other doc started
+        if(!empty($data['data']['othername'])){ 
+          foreach($data['data']['othername'] as $key => $value) {
+            $docFileName=empty($value['name'])?'otherDoc_'.$key:$value['name'];
+            if(is_file($value['doc'])){
+              $nameArr=explode('/', $data['data']['main']['appForm']);
+              $name=end($nameArr);
+              $fileLinks[$name]=base_url().$value['doc'];
+            }
+          } }
+
+        // other doc ended
+
+        unset($data['data']);
+        // for uploaded files links ended
+
+        // for hospital data sheet started
+        $data['data']=$this->CertificationModel->get_approvalview($CertificationID);
+        $data['CertificationID']=$CertificationID;
+        $html.=$this->load->view('certification/hospitaldata_pdf',$data,true);
+        $pdf = new Pdf('P', 'mm', 'A4', true, 'UTF-8', false);
+        $pdf->SetTitle('My Title');
+        $pdf->SetHeaderMargin(30);
+        $pdf->SetTopMargin(20);
+        $pdf->setFooterMargin(20);
+        $pdf->SetAutoPageBreak(true);
+        $pdf->SetAuthor('Author');
+        $pdf->SetDisplayMode('real', 'default');
+        $pdf->AddPage();
+        $pdf->writeHTML($html, true, false, true, false, '');
+        $userFolder=$this->session->userdata('UserID');
+        if (!file_exists('assets/pdf/'.$userFolder)) {
+            mkdir('assets/pdf/'.$userFolder, 0777, true);
+        }        
+        $pdf->Output(__DIR__ . '../../../assets/pdf/'.$userFolder.'/hospitaldata.pdf', 'F');
+        $fileLinks['hospitaldata.pdf']=base_url()."/assets/pdf/".$userFolder."/hospitaldata.pdf";
+        unset($data['data']);
+        // for hospital data sheet ended
+
+        // lr assessment started
+        if(!empty($lrAssessmentID) && !empty($lrAssessmentFormat)){
+          $dataLR=array();
+          $dataLR['ansId']=$lrAssessmentID;
+          $dataLR['format']=$lrAssessmentFormat;
+
+          $data['data']=$this->FacilityModel->surveyFormatDownload($dataLR);
+          $html.=$this->load->view('facility/facility_pdf',$data,true);
+          $pdf = new Pdf('P', 'mm', 'A4', true, 'UTF-8', false);
+          $pdf->SetTitle('My Title');
+          $pdf->SetHeaderMargin(30);
+          $pdf->SetTopMargin(20);
+          $pdf->setFooterMargin(20);
+          $pdf->SetAutoPageBreak(true);
+          $pdf->SetAuthor('Author');
+          $pdf->SetDisplayMode('real', 'default');
+          $pdf->AddPage();
+          $pdf->writeHTML($html, true, false, true, false, '');
+          $userFolder=$this->session->userdata('UserID');
+          if (!file_exists('assets/pdf/'.$userFolder)) {
+              mkdir('assets/pdf/'.$userFolder, 0777, true);
+          }
+          if($data['data']['score'][0]['SurveyName']=='Operation Theater'){
+            $pdfName='otassessment.pdf';
+          } else {
+            $pdfName='lrassessment.pdf';
+          }
+          $pdf->Output(__DIR__ . '../../../assets/pdf/'.$userFolder.'/'.$pdfName, 'F');
+          $fileLinks[$pdfName]=base_url()."/assets/pdf/".$userFolder."/".$pdfName;
+          unset($data['data']);
+        }
+        // lr assessment ended
+        // ot assessment started
+        if(!empty($otAssessmentID) && !empty($otAssessmentFormat)){
+          $dataOT=array();
+          $dataOT['ansId']=$otAssessmentID;
+          $dataOT['format']=$otAssessmentFormat;
+
+          $data['data']=$this->FacilityModel->surveyFormatDownload($dataOT);
+          $html.=$this->load->view('facility/facility_pdf',$data,true);
+          $pdf = new Pdf('P', 'mm', 'A4', true, 'UTF-8', false);
+          $pdf->SetTitle('My Title');
+          $pdf->SetHeaderMargin(30);
+          $pdf->SetTopMargin(20);
+          $pdf->setFooterMargin(20);
+          $pdf->SetAutoPageBreak(true);
+          $pdf->SetAuthor('Author');
+          $pdf->SetDisplayMode('real', 'default');
+          $pdf->AddPage();
+          $pdf->writeHTML($html, true, false, true, false, '');
+          $userFolder=$this->session->userdata('UserID');
+          if (!file_exists('assets/pdf/'.$userFolder)) {
+              mkdir('assets/pdf/'.$userFolder, 0777, true);
+          }
+          if($data['data']['score'][0]['SurveyName']=='Operation Theater'){
+            $pdfName='otassessment.pdf';
+          } else {
+            $pdfName='lrassessment.pdf';
+          }
+          $pdf->Output(__DIR__ . '../../../assets/pdf/'.$userFolder.'/'.$pdfName, 'F');
+          $fileLinks[$pdfName]=base_url()."/assets/pdf/".$userFolder."/".$pdfName;
+          unset($data['data']);
+        }
+        // ot assessment ended
+        // indicator 1 started
+            $datapdf=array();
+            $datapdf['CertificationID']=encryptor($CertificationID);            
+            $datapdf['monthCount']=encryptor('1');
+            $data['indicator_data']=$this->MonthlyModel->reportData_certificate($datapdf);
+            $html.=$this->load->view('monthly/monthly_report_certificate_pdf',$data,true);
+            $monthCounts='1';
+            $pdf = new Pdf('P', 'mm', 'A4', true, 'UTF-8', false);
+            $pdf->SetTitle('My Title');
+            $pdf->SetHeaderMargin(30);
+            $pdf->SetTopMargin(20);
+            $pdf->setFooterMargin(20);
+            $pdf->SetAutoPageBreak(true);
+            $pdf->SetAuthor('Author');
+            $pdf->SetDisplayMode('real', 'default');
+            $pdf->AddPage();
+            $pdf->writeHTML($html, true, false, true, false, '');
+            $userFolder=$this->session->userdata('UserID');
+            if (!file_exists('assets/pdf/'.$userFolder)) {
+                mkdir('assets/pdf/'.$userFolder, 0777, true);
+            }        
+            $name = 'indicator_report_'.$monthCounts.'.pdf';
+            $pdf->Output(__DIR__ . '../../../assets/pdf/'.$userFolder.'/'.$name, 'F');
+            $fileLinks[$name]=base_url()."/assets/pdf/".$userFolder."/".$pdfName;        
+        // indicator 1 ended
+        // indicator 2 started
+            $datapdf=array();
+            $datapdf['CertificationID']=encryptor($CertificationID);            
+            $datapdf['monthCount']=encryptor('1');
+            $data['indicator_data']=$this->MonthlyModel->reportData_certificate($datapdf);
+            $html.=$this->load->view('monthly/monthly_report_certificate_pdf',$data,true);
+            $monthCounts='2';
+            $pdf = new Pdf('P', 'mm', 'A4', true, 'UTF-8', false);
+            $pdf->SetTitle('My Title');
+            $pdf->SetHeaderMargin(30);
+            $pdf->SetTopMargin(20);
+            $pdf->setFooterMargin(20);
+            $pdf->SetAutoPageBreak(true);
+            $pdf->SetAuthor('Author');
+            $pdf->SetDisplayMode('real', 'default');
+            $pdf->AddPage();
+            $pdf->writeHTML($html, true, false, true, false, '');
+            $userFolder=$this->session->userdata('UserID');
+            if (!file_exists('assets/pdf/'.$userFolder)) {
+                mkdir('assets/pdf/'.$userFolder, 0777, true);
+            }        
+            $name = 'indicator_report_'.$monthCounts.'.pdf';
+            $pdf->Output(__DIR__ . '../../../assets/pdf/'.$userFolder.'/'.$name, 'F');
+            $fileLinks[$name]=base_url()."/assets/pdf/".$userFolder."/".$pdfName;        
+        // indicator 2 ended
+        // indicator 3 started
+            $datapdf=array();
+            $datapdf['CertificationID']=encryptor($CertificationID);            
+            $datapdf['monthCount']=encryptor('1');
+            $data['indicator_data']=$this->MonthlyModel->reportData_certificate($datapdf);
+            $html.=$this->load->view('monthly/monthly_report_certificate_pdf',$data,true);
+            $monthCounts='3';
+            $pdf = new Pdf('P', 'mm', 'A4', true, 'UTF-8', false);
+            $pdf->SetTitle('My Title');
+            $pdf->SetHeaderMargin(30);
+            $pdf->SetTopMargin(20);
+            $pdf->setFooterMargin(20);
+            $pdf->SetAutoPageBreak(true);
+            $pdf->SetAuthor('Author');
+            $pdf->SetDisplayMode('real', 'default');
+            $pdf->AddPage();
+            $pdf->writeHTML($html, true, false, true, false, '');
+            $userFolder=$this->session->userdata('UserID');
+            if (!file_exists('assets/pdf/'.$userFolder)) {
+                mkdir('assets/pdf/'.$userFolder, 0777, true);
+            }        
+            $name = 'indicator_report_'.$monthCounts.'.pdf';
+            $pdf->Output(__DIR__ . '../../../assets/pdf/'.$userFolder.'/'.$name, 'F');
+            $fileLinks[$name]=base_url()."/assets/pdf/".$userFolder."/".$pdfName;        
+        // indicator 1 ended
+        echo "<pre>"; print_r($fileLinks); echo "</pre>";
+        //echo "<pre>"; print_r($data['data']); echo "</pre>";
+
+
+        $this->load->library('zip');
+        foreach ($fileLinks as $keys=>$fileDownlaod) {
+            $this->zip->add_data($keys, $fileDownlaod);
+        }
+        $this->zip->archive(__DIR__ . '../../../assets/pdf/'.$userFolder.'/'.$userFolder.'.zip');
+        $this->zip->download($userFolder.'.zip');
+
+
+
+        //echo '<script>window.close()</script>';
+      }
+
+    }
