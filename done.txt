@@ -1,0 +1,7 @@
+delete FROM `users` WHERE `UserID` in( SELECT UserID FROM `usermapping` WHERE `FacilityID` in( SELECT FacilityID FROM `facilities` WHERE `StateID` = 12 ORDER BY `FacilityID` DESC ));    
+
+delete FROM `userrole` WHERE `UserID` in( SELECT UserID FROM `usermapping` WHERE `FacilityID` in( SELECT FacilityID FROM `facilities` WHERE `StateID` = 12 ORDER BY `FacilityID` DESC ) ) ORDER BY `userrole`.`UserID` DESC;
+
+delete FROM `usermapping` WHERE `FacilityID` in( SELECT FacilityID FROM `facilities` WHERE `StateID` = 12 ORDER BY `FacilityID` DESC );
+
+delete FROM `facilities` WHERE `StateID` = 12 ORDER BY `FacilityID` DESC;
