@@ -1,0 +1,100 @@
+-- phpMyAdmin SQL Dump
+-- version 4.6.5.2
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Mar 29, 2019 at 03:32 AM
+-- Server version: 10.1.21-MariaDB
+-- PHP Version: 5.6.30
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `lakshya`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `district`
+--
+
+CREATE TABLE `district` (
+  `DistrictID` int(11) UNSIGNED NOT NULL,
+  `DistrictName` varchar(50) NOT NULL,
+  `StateID` int(11) NOT NULL,
+  `DistrictCode` varchar(45) DEFAULT NULL,
+  `CensusCode` varchar(45) DEFAULT NULL,
+  `IsHighPriority` bit(1) NOT NULL DEFAULT b'0',
+  `IsActive` bit(1) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `district`
+--
+
+INSERT INTO `district` (`DistrictID`, `DistrictName`, `StateID`, `DistrictCode`, `CensusCode`, `IsHighPriority`, `IsActive`) VALUES
+(651, 'Valsad', 12, 'valsad', '0', b'1', b'1'),
+(650, 'Vadodara', 12, 'vadodara', '0', b'1', b'1'),
+(649, 'Vyara', 12, 'tapi', '0', b'1', b'1'),
+(648, 'Surendranagar', 12, 'surendranagar', '0', b'1', b'1'),
+(647, 'SMC', 12, 'surat', '0', b'1', b'1'),
+(646, 'Himmatnagar', 12, 'sabarkantha', '0', b'1', b'1'),
+(645, 'Rajkot', 12, 'rajkot', '0', b'1', b'1'),
+(644, 'Porbandar', 12, 'porbandar', '0', b'1', b'1'),
+(643, 'Patan', 12, 'patan', '0', b'1', b'1'),
+(642, 'Godhra', 12, 'panchmahal', '0', b'1', b'1'),
+(641, 'Navsari', 12, 'navsari', '0', b'1', b'1'),
+(640, 'Morbi', 12, 'morbi', '0', b'1', b'1'),
+(639, 'Lunawada', 12, 'mahisagar', '0', b'1', b'1'),
+(638, 'Vadnagar', 12, 'mahesana', '0', b'1', b'1'),
+(637, 'Nadiad', 12, 'kheda', '0', b'1', b'1'),
+(636, 'Bhuj', 12, 'kutchh', '0', b'1', b'1'),
+(635, 'Junagadh', 12, 'junagadh', '0', b'1', b'1'),
+(634, 'Jamnagar', 12, 'jamnagar', '0', b'1', b'1'),
+(633, 'Veraval', 12, 'girsomnath', '0', b'1', b'1'),
+(632, 'Gandhinagar', 12, 'gandhinagar', '0', b'1', b'1'),
+(631, 'Khambhaliya', 12, 'dwarka', '0', b'1', b'1'),
+(630, 'Ahwa', 12, 'dang', '0', b'1', b'1'),
+(629, 'Chhota Udaipur', 12, 'chhotaudepur', '0', b'1', b'1'),
+(628, 'Botad', 12, 'botad', '0', b'1', b'1'),
+(627, 'Bhavnagar', 12, 'bhavnagar', '0', b'1', b'1'),
+(626, 'Bharuch', 12, 'bharuch', '0', b'1', b'1'),
+(625, 'Palanpur', 12, 'banaskantha', '0', b'1', b'1'),
+(624, 'Bhiloda', 12, 'arvalli', '0', b'1', b'1'),
+(623, 'Petlad', 12, 'anand', '0', b'1', b'1'),
+(622, 'Amreli', 12, 'amreli', '0', b'1', b'1'),
+(621, 'AMC', 12, 'ahmedabad', '0', b'1', b'1'),
+(602, 'Narmada', 12, 'narmada', '0', b'1', b'1'),
+(601, 'Dahod', 12, 'dahod', '0', b'1', b'1');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `district`
+--
+ALTER TABLE `district`
+  ADD PRIMARY KEY (`DistrictID`),
+  ADD KEY `StateID` (`StateID`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `district`
+--
+ALTER TABLE `district`
+  MODIFY `DistrictID` int(11) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=652;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
