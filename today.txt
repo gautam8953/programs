@@ -1,0 +1,1203 @@
+
+ALTER TABLE `district` ADD `Aspirational` BIT(1) NOT NULL DEFAULT b'0' AFTER `IsHighPriority`; 
+ 
+		if($this->input->post('district_type')>1){
+			if(intval($this->input->post('district_type'))==2){
+				if($data['show_district']){
+					$data['CMOStateData'] = $this->BaseModel->getRecord("CALL FetchMinistryStatisticsWithDistrictTypeAsp(0,$month,$year,$to_month,$to_year,$reg_to_month,$by_district,$by_state,)");
+				} else {
+					$data['CMOStateData'] = $this->BaseModel->getRecord("CALL FetchMinistryStatisticsTypeAsp(0,$month,$year,$to_month,$to_year,$reg_to_month,$by_state)");			
+				}
+			} else {
+				if($data['show_district']){
+					$data['CMOStateData'] = $this->BaseModel->getRecord("CALL FetchMinistryStatisticsWithDistrictType(0,$month,$year,$to_month,$to_year,$reg_to_month,$by_district,$by_state,)");
+				} else {
+					$data['CMOStateData'] = $this->BaseModel->getRecord("CALL FetchMinistryStatisticsType(0,$month,$year,$to_month,$to_year,$reg_to_month,$by_state)");			
+				}
+			}
+
+		} else {
+			if($data['show_district']){
+				$data['CMOStateData'] = $this->BaseModel->getRecord("CALL FetchMinistryStatisticsWithDistrict(0,$month,$year,$to_month,$to_year,$reg_to_month,$by_district,$by_state)");
+			} else {
+				$data['CMOStateData'] = $this->BaseModel->getRecord("CALL FetchMinistryStatisticsNew(0,$month,$year,$to_month,$to_year,$reg_to_month,$by_state)");			
+			}
+		}
+    
+    
+    DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `FetchMinistryStatisticsType`(IN `parm_EntityID` INT, IN `parm_Month` INT, IN `parm_Year` INT, IN `parm_ToMonth` INT, IN `parm_ToYear` INT, IN `parm_Reg_Month` INT, IN `param_State` INT)
+    NO SQL
+BEGIN
+
+
+
+SELECT 
+s.StateName,
+CASE WHEN sp.StateID IS NULL THEN 'Pending' ELSE 'Submited' END AS ProfileStatus,
+(SELECT IFNULL(COUNT(v.VolunteerID),0) FROM volunteer v
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE v.IsActive=1 and e1.ParentEntityID= ue.entityID  
+AND ( (parm_Month=0) OR (
+        DATE_FORMAT(v.Createdon,'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+      LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_Reg_Month,'-',01), '%Y-%m-%d'))
+       )
+    )
+) AS `TotalVolunteerRegistered`,
+
+(SELECT IFNULL(COUNT(DISTINCT(v.VolunteerID)),0)
+from volunteer v 
+inner join volunteermontlycheckup vmc on v.volunteerid=vmc.volunteerid
+inner join monthlycheckup mc on mc.MonthlyCheckUpID=vmc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID 
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+where IsReportDesignatedDay=1 and vmc.PregnantWomenCount != 0 and v.IsActive=1 and vmc.IsActive=1 and e1.ParentEntityID= ue.entityID
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+    LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+       ) 
+    )
+) as `TotalVolunteerProvideService`,
+
+(SELECT IFNULL(SUM(vc.PregnantWomenCount),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.ParentEntityID= ue.entityID 
+AND ( (parm_Month=0) OR ( 
+     STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+         STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+         LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+        ) 
+    )
+ ) AS `TotalPWSeenByVolunteer`,
+
+(SELECT IFNULL(SUM(vc.ServiceHours),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.ParentEntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursVolunteers`,
+
+ (SELECT IFNULL(SUM(vc.FreeUsgRadiologist),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.ParentEntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursFreeRadio`,
+
+(SELECT IFNULL(SUM(vc.FreeInvestPathologist),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.ParentEntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursFreeInvestigation`,
+
+  ( SELECT IFNULL(COUNT(CMOFacilityID),0) FROM cmofacilities cmo
+INNER JOIN entity e on e.EntityID=cmo.CMOEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE cmo.IsActive=1 and e.ParentEntityId=ue.entityID  
+AND ( (parm_Month=0) OR (
+          DATE_FORMAT(cmo.Createdon,'%Y-%m-%d') BETWEEN
+          STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+          LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+    ) 
+    )
+) AS `PMSMAFacilitiesNumber`,
+
+  ( SELECT IFNULL(COUNT(GrievanceID),0) FROM grievance g
+INNER JOIN entity e on e.EntityID=g.AssignedToEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE g.IsActive=1 and e1.ParentEntityID=ue.entityID  
+AND ( (parm_Month=0) OR (
+    DATE_FORMAT(g.Createdon,'%Y-%m-%d') 
+        BETWEEN STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+) AS `TotalGrievance`,
+
+   ( SELECT IFNULL(COUNT(GrievanceID),0) FROM grievance g 
+inner join typedetail td on td.typedetailid=g.StatustypeDetailID 
+INNER JOIN entity e on e.EntityID=g.AssignedToEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+WHERE g.IsActive=1 and td.TypeDetaillogicalcode='Pending' and e1.Parententityid=ue.entityID  
+AND ( (parm_Month=0) OR (
+         DATE_FORMAT(g.Createdon,'%Y-%m-%d') 
+         BETWEEN STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+         LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+        ) 
+    )
+) AS `TotalGrievanceNotAnsward`,
+
+ifnull(`AntenatalCare`,0) AS AntenatalCare,
+ifnull(`AntenatalCareTrimester`,0) AS  AntenatalCareTrimester,
+ifnull(`ReceivedMCTS`,0) AS ReceivedMCTS,
+ifnull(`HaemoglobinChecked`,0) AS HaemoglobinChecked,
+ifnull(`UltraSoundConducted`,0) AS UltraSoundConducted,
+ifnull(`ScreenedHIV`,0) AS ScreenedHIV,
+ifnull(`TestedSyphilis`,0) AS TestedSyphilis,
+ifnull(`ScreenedGDM`,0) AS ScreenedGDM,
+ifnull(`AnaemiaSevere`,0) AS AnaemiaSevere,
+ifnull(`HyperTensionInduced`,0) AS HyperTensionInduced,
+ifnull(`IdentifiedDiabetes`,0) AS IdentifiedDiabetes,
+ifnull(`ReactiveHIV`,0) AS ReactiveHIV,
+ifnull(`IdetifiedSyphilis`,0) AS IdetifiedSyphilis,
+ifnull(`HighRiskPregnancies`,0) AS HighRiskPregnancies,
+ifnull(`HighRiskPregnanciesFacilities`,0) AS HighRiskPregnanciesFacilities,
+
+ifnull(`PWLeftOut`,0) AS PWLeftOut,
+ifnull(`AncByObgyn`,0) AS AncByObgyn,
+ifnull(`AncByMbbs`,0) AS AncByMbbs,
+ifnull(`BloodGroupChecked`,0) AS BloodGroupChecked,
+ifnull(`UrineAlbuminChecked`,0) AS UrineAlbuminChecked,
+ifnull(`UltraSoundConducted2`,0) AS UltraSoundConducted2,
+ifnull(`ScreenedHIV2`,0) AS ScreenedHIV2,
+ifnull(`TestedSyphilis2`,0) AS TestedSyphilis2,
+ifnull(`AnaemiaSevere2`,0) AS AnaemiaSevere2,
+ifnull(`AnaemiaSevere3`,0) AS AnaemiaSevere3,
+ifnull(`HyperTensionInduced2`,0) AS HyperTensionInduced2,
+ifnull(`HyperTensionInduced3`,0) AS HyperTensionInduced3,
+ifnull(`IdentifiedDiabetes2`,0) AS IdentifiedDiabetes2,
+ifnull(`IdentifiedDiabetes3`,0) AS IdentifiedDiabetes3,
+ifnull(`ReactiveHIV2`,0) AS ReactiveHIV2,
+ifnull(`ReactiveHIV3`,0) AS ReactiveHIV3,
+ifnull(`IdetifiedSyphilis2`,0) AS IdetifiedSyphilis2,
+ifnull(`IdetifiedSyphilis3`,0) AS IdetifiedSyphilis3,
+ifnull(`Hypothyroidism1`,0) AS Hypothyroidism1,
+ifnull(`Hypothyroidism2`,0) AS Hypothyroidism2,
+ifnull(`Hypothyroidism3`,0) AS Hypothyroidism3,
+ifnull(`Tuberculosis1`,0) AS Tuberculosis1,
+ifnull(`Tuberculosis2`,0) AS Tuberculosis2,
+ifnull(`Tuberculosis3`,0) AS Tuberculosis3,
+ifnull(`Malaria1`,0) AS Malaria1,
+ifnull(`Malaria2`,0) AS Malaria2,
+ifnull(`Malaria3`,0) AS Malaria3,
+ifnull(`LSCS1`,0) AS LSCS1,
+ifnull(`LSCS2`,0) AS LSCS2,
+ifnull(`LSCS3`,0) AS LSCS3,
+ifnull(`Obstetric1`,0) AS Obstetric1,
+ifnull(`Obstetric2`,0) AS Obstetric2,
+ifnull(`Obstetric3`,0) AS Obstetric3,
+ifnull(`HighRiskReferFacilities`,0) AS HighRiskReferFacilities
+
+from  userdistrict u
+inner join userentity ue on u.userid=ue.userid
+inner join states s on s.stateid=u.stateid and s.stateid is not null
+inner join district d on d.StateID=s.StateID AND d.IsHighPriority=1
+left join     (SELECT e1.ParentEntityID,
+
+sum(ifnull(`AntenatalCare`,0)) AS AntenatalCare,
+sum(ifnull(`AntenatalCareTrimester`,0)) AS  AntenatalCareTrimester,
+sum(ifnull(`ReceivedMCTS`,0)) AS ReceivedMCTS,
+sum(ifnull(`HaemoglobinChecked`,0)) AS HaemoglobinChecked,
+sum(ifnull(`UltraSoundConducted`,0)) AS UltraSoundConducted,
+sum(ifnull(`ScreenedHIV`,0)) AS ScreenedHIV,
+sum(ifnull(`TestedSyphilis`,0)) AS TestedSyphilis,
+sum(ifnull(`ScreenedGDM`,0)) AS ScreenedGDM,
+sum(ifnull(`AnaemiaSevere`,0)) AS AnaemiaSevere,
+sum(ifnull(`HyperTensionInduced`,0)) AS HyperTensionInduced,
+sum(ifnull(`IdentifiedDiabetes`,0)) AS IdentifiedDiabetes,
+sum(ifnull(`ReactiveHIV`,0)) AS ReactiveHIV,
+sum(ifnull(`IdetifiedSyphilis`,0)) AS IdetifiedSyphilis,
+sum(ifnull(`AnaemiaSevere`,0))+sum(ifnull(`IdentifiedDiabetes`,0))+ sum(ifnull(`ReactiveHIV`,0))+ sum(ifnull(`IdetifiedSyphilis`,0))+sum(ifnull(`HyperTensionInduced`,0)) AS HighRiskPregnancies,
+sum(ifnull(`HighRiskPregnanciesFacilities`,0)) AS HighRiskPregnanciesFacilities,
+
+sum(ifnull(`PWLeftOut`,0)) AS PWLeftOut,
+sum(ifnull(`AncByObgyn`,0)) AS AncByObgyn,
+sum(ifnull(`AncByMbbs`,0)) AS AncByMbbs,
+sum(ifnull(`BloodGroupChecked`,0)) AS BloodGroupChecked,
+sum(ifnull(`UrineAlbuminChecked`,0)) AS UrineAlbuminChecked,
+sum(ifnull(`UltraSoundConducted2`,0)) AS UltraSoundConducted2,
+sum(ifnull(`ScreenedHIV2`,0)) AS ScreenedHIV2,
+sum(ifnull(`TestedSyphilis2`,0)) AS TestedSyphilis2,
+sum(ifnull(`AnaemiaSevere2`,0)) AS AnaemiaSevere2,
+sum(ifnull(`AnaemiaSevere3`,0)) AS AnaemiaSevere3,
+sum(ifnull(`HyperTensionInduced2`,0)) AS HyperTensionInduced2,
+sum(ifnull(`HyperTensionInduced3`,0)) AS HyperTensionInduced3,
+sum(ifnull(`IdentifiedDiabetes2`,0)) AS IdentifiedDiabetes2,
+sum(ifnull(`IdentifiedDiabetes3`,0)) AS IdentifiedDiabetes3,
+sum(ifnull(`ReactiveHIV2`,0)) AS ReactiveHIV2,
+sum(ifnull(`ReactiveHIV3`,0)) AS ReactiveHIV3,
+sum(ifnull(`IdetifiedSyphilis2`,0)) AS IdetifiedSyphilis2,
+sum(ifnull(`IdetifiedSyphilis3`,0)) AS IdetifiedSyphilis3,
+sum(ifnull(`Hypothyroidism1`,0)) AS Hypothyroidism1,
+sum(ifnull(`Hypothyroidism2`,0)) AS Hypothyroidism2,
+sum(ifnull(`Hypothyroidism3`,0)) AS Hypothyroidism3,
+sum(ifnull(`Tuberculosis1`,0)) AS Tuberculosis1,
+sum(ifnull(`Tuberculosis2`,0)) AS Tuberculosis2,
+sum(ifnull(`Tuberculosis3`,0)) AS Tuberculosis3,
+sum(ifnull(`Malaria1`,0)) AS Malaria1,
+sum(ifnull(`Malaria2`,0)) AS Malaria2,
+sum(ifnull(`Malaria3`,0)) AS Malaria3,
+sum(ifnull(`LSCS1`,0)) AS LSCS1,
+sum(ifnull(`LSCS2`,0)) AS LSCS2,
+sum(ifnull(`LSCS3`,0)) AS LSCS3,
+sum(ifnull(`Obstetric1`,0)) AS Obstetric1,
+sum(ifnull(`Obstetric2`,0)) AS Obstetric2,
+sum(ifnull(`Obstetric3`,0)) AS Obstetric3,
+sum(ifnull(`HighRiskReferFacilities`,0)) AS HighRiskReferFacilities
+
+ FROM cmomonthlycheckup cmc
+ INNER JOIN monthlycheckup mc on cmc.monthlycheckupid=mc.monthlycheckupid
+ INNER JOIN entity e1 on e1.EntityID=mc.CMOEntityID
+INNER JOIN userentity useren on useren.EntityID=e1.EntityID
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE cmc.IsActive=1 AND mc.IsActive=1  
+ AND ( (parm_Month=0) OR (
+    STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+    STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+    LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+        ) 
+    )
+ GROUP BY e1.ParentEntityID
+) as pmsmastat on pmsmastat.ParentEntityID=ue.EntityID
+
+LEFT JOIN stateprofile sp ON ue.EntityID=sp.EntityID
+where u.isactive=1 and ue.isactive=1 and s.isactive=1
+AND (param_State=0 OR s.StateID=param_State)
+group by s.statename
+order by s.statename;
+
+
+END$$
+DELIMITER ;
+
+
+
+
+
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `FetchMinistryStatisticsTypeAsp`(IN `parm_EntityID` INT, IN `parm_Month` INT, IN `parm_Year` INT, IN `parm_ToMonth` INT, IN `parm_ToYear` INT, IN `parm_Reg_Month` INT, IN `param_State` INT)
+    NO SQL
+BEGIN
+
+
+
+SELECT 
+s.StateName,
+CASE WHEN sp.StateID IS NULL THEN 'Pending' ELSE 'Submited' END AS ProfileStatus,
+(SELECT IFNULL(COUNT(v.VolunteerID),0) FROM volunteer v
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE v.IsActive=1 and e1.ParentEntityID= ue.entityID  
+AND ( (parm_Month=0) OR (
+        DATE_FORMAT(v.Createdon,'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+      LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_Reg_Month,'-',01), '%Y-%m-%d'))
+       )
+    )
+) AS `TotalVolunteerRegistered`,
+
+(SELECT IFNULL(COUNT(DISTINCT(v.VolunteerID)),0)
+from volunteer v 
+inner join volunteermontlycheckup vmc on v.volunteerid=vmc.volunteerid
+inner join monthlycheckup mc on mc.MonthlyCheckUpID=vmc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID 
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+where IsReportDesignatedDay=1 and vmc.PregnantWomenCount != 0 and v.IsActive=1 and vmc.IsActive=1 and e1.ParentEntityID= ue.entityID
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+    LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+       ) 
+    )
+) as `TotalVolunteerProvideService`,
+
+(SELECT IFNULL(SUM(vc.PregnantWomenCount),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.ParentEntityID= ue.entityID 
+AND ( (parm_Month=0) OR ( 
+     STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+         STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+         LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+        ) 
+    )
+ ) AS `TotalPWSeenByVolunteer`,
+
+(SELECT IFNULL(SUM(vc.ServiceHours),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.ParentEntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursVolunteers`,
+
+ (SELECT IFNULL(SUM(vc.FreeUsgRadiologist),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.ParentEntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursFreeRadio`,
+
+(SELECT IFNULL(SUM(vc.FreeInvestPathologist),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.ParentEntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursFreeInvestigation`,
+
+  ( SELECT IFNULL(COUNT(CMOFacilityID),0) FROM cmofacilities cmo
+INNER JOIN entity e on e.EntityID=cmo.CMOEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE cmo.IsActive=1 and e.ParentEntityId=ue.entityID  
+AND ( (parm_Month=0) OR (
+          DATE_FORMAT(cmo.Createdon,'%Y-%m-%d') BETWEEN
+          STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+          LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+    ) 
+    )
+) AS `PMSMAFacilitiesNumber`,
+
+  ( SELECT IFNULL(COUNT(GrievanceID),0) FROM grievance g
+INNER JOIN entity e on e.EntityID=g.AssignedToEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE g.IsActive=1 and e1.ParentEntityID=ue.entityID  
+AND ( (parm_Month=0) OR (
+    DATE_FORMAT(g.Createdon,'%Y-%m-%d') 
+        BETWEEN STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+) AS `TotalGrievance`,
+
+   ( SELECT IFNULL(COUNT(GrievanceID),0) FROM grievance g 
+inner join typedetail td on td.typedetailid=g.StatustypeDetailID 
+INNER JOIN entity e on e.EntityID=g.AssignedToEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+WHERE g.IsActive=1 and td.TypeDetaillogicalcode='Pending' and e1.Parententityid=ue.entityID  
+AND ( (parm_Month=0) OR (
+         DATE_FORMAT(g.Createdon,'%Y-%m-%d') 
+         BETWEEN STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+         LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+        ) 
+    )
+) AS `TotalGrievanceNotAnsward`,
+
+ifnull(`AntenatalCare`,0) AS AntenatalCare,
+ifnull(`AntenatalCareTrimester`,0) AS  AntenatalCareTrimester,
+ifnull(`ReceivedMCTS`,0) AS ReceivedMCTS,
+ifnull(`HaemoglobinChecked`,0) AS HaemoglobinChecked,
+ifnull(`UltraSoundConducted`,0) AS UltraSoundConducted,
+ifnull(`ScreenedHIV`,0) AS ScreenedHIV,
+ifnull(`TestedSyphilis`,0) AS TestedSyphilis,
+ifnull(`ScreenedGDM`,0) AS ScreenedGDM,
+ifnull(`AnaemiaSevere`,0) AS AnaemiaSevere,
+ifnull(`HyperTensionInduced`,0) AS HyperTensionInduced,
+ifnull(`IdentifiedDiabetes`,0) AS IdentifiedDiabetes,
+ifnull(`ReactiveHIV`,0) AS ReactiveHIV,
+ifnull(`IdetifiedSyphilis`,0) AS IdetifiedSyphilis,
+ifnull(`HighRiskPregnancies`,0) AS HighRiskPregnancies,
+ifnull(`HighRiskPregnanciesFacilities`,0) AS HighRiskPregnanciesFacilities,
+
+ifnull(`PWLeftOut`,0) AS PWLeftOut,
+ifnull(`AncByObgyn`,0) AS AncByObgyn,
+ifnull(`AncByMbbs`,0) AS AncByMbbs,
+ifnull(`BloodGroupChecked`,0) AS BloodGroupChecked,
+ifnull(`UrineAlbuminChecked`,0) AS UrineAlbuminChecked,
+ifnull(`UltraSoundConducted2`,0) AS UltraSoundConducted2,
+ifnull(`ScreenedHIV2`,0) AS ScreenedHIV2,
+ifnull(`TestedSyphilis2`,0) AS TestedSyphilis2,
+ifnull(`AnaemiaSevere2`,0) AS AnaemiaSevere2,
+ifnull(`AnaemiaSevere3`,0) AS AnaemiaSevere3,
+ifnull(`HyperTensionInduced2`,0) AS HyperTensionInduced2,
+ifnull(`HyperTensionInduced3`,0) AS HyperTensionInduced3,
+ifnull(`IdentifiedDiabetes2`,0) AS IdentifiedDiabetes2,
+ifnull(`IdentifiedDiabetes3`,0) AS IdentifiedDiabetes3,
+ifnull(`ReactiveHIV2`,0) AS ReactiveHIV2,
+ifnull(`ReactiveHIV3`,0) AS ReactiveHIV3,
+ifnull(`IdetifiedSyphilis2`,0) AS IdetifiedSyphilis2,
+ifnull(`IdetifiedSyphilis3`,0) AS IdetifiedSyphilis3,
+ifnull(`Hypothyroidism1`,0) AS Hypothyroidism1,
+ifnull(`Hypothyroidism2`,0) AS Hypothyroidism2,
+ifnull(`Hypothyroidism3`,0) AS Hypothyroidism3,
+ifnull(`Tuberculosis1`,0) AS Tuberculosis1,
+ifnull(`Tuberculosis2`,0) AS Tuberculosis2,
+ifnull(`Tuberculosis3`,0) AS Tuberculosis3,
+ifnull(`Malaria1`,0) AS Malaria1,
+ifnull(`Malaria2`,0) AS Malaria2,
+ifnull(`Malaria3`,0) AS Malaria3,
+ifnull(`LSCS1`,0) AS LSCS1,
+ifnull(`LSCS2`,0) AS LSCS2,
+ifnull(`LSCS3`,0) AS LSCS3,
+ifnull(`Obstetric1`,0) AS Obstetric1,
+ifnull(`Obstetric2`,0) AS Obstetric2,
+ifnull(`Obstetric3`,0) AS Obstetric3,
+ifnull(`HighRiskReferFacilities`,0) AS HighRiskReferFacilities
+
+from  userdistrict u
+inner join userentity ue on u.userid=ue.userid
+inner join states s on s.stateid=u.stateid and s.stateid is not null
+inner join district d on d.StateID=s.StateID AND d.Aspirational=1
+left join     (SELECT e1.ParentEntityID,
+
+sum(ifnull(`AntenatalCare`,0)) AS AntenatalCare,
+sum(ifnull(`AntenatalCareTrimester`,0)) AS  AntenatalCareTrimester,
+sum(ifnull(`ReceivedMCTS`,0)) AS ReceivedMCTS,
+sum(ifnull(`HaemoglobinChecked`,0)) AS HaemoglobinChecked,
+sum(ifnull(`UltraSoundConducted`,0)) AS UltraSoundConducted,
+sum(ifnull(`ScreenedHIV`,0)) AS ScreenedHIV,
+sum(ifnull(`TestedSyphilis`,0)) AS TestedSyphilis,
+sum(ifnull(`ScreenedGDM`,0)) AS ScreenedGDM,
+sum(ifnull(`AnaemiaSevere`,0)) AS AnaemiaSevere,
+sum(ifnull(`HyperTensionInduced`,0)) AS HyperTensionInduced,
+sum(ifnull(`IdentifiedDiabetes`,0)) AS IdentifiedDiabetes,
+sum(ifnull(`ReactiveHIV`,0)) AS ReactiveHIV,
+sum(ifnull(`IdetifiedSyphilis`,0)) AS IdetifiedSyphilis,
+sum(ifnull(`AnaemiaSevere`,0))+sum(ifnull(`IdentifiedDiabetes`,0))+ sum(ifnull(`ReactiveHIV`,0))+ sum(ifnull(`IdetifiedSyphilis`,0))+sum(ifnull(`HyperTensionInduced`,0)) AS HighRiskPregnancies,
+sum(ifnull(`HighRiskPregnanciesFacilities`,0)) AS HighRiskPregnanciesFacilities,
+
+sum(ifnull(`PWLeftOut`,0)) AS PWLeftOut,
+sum(ifnull(`AncByObgyn`,0)) AS AncByObgyn,
+sum(ifnull(`AncByMbbs`,0)) AS AncByMbbs,
+sum(ifnull(`BloodGroupChecked`,0)) AS BloodGroupChecked,
+sum(ifnull(`UrineAlbuminChecked`,0)) AS UrineAlbuminChecked,
+sum(ifnull(`UltraSoundConducted2`,0)) AS UltraSoundConducted2,
+sum(ifnull(`ScreenedHIV2`,0)) AS ScreenedHIV2,
+sum(ifnull(`TestedSyphilis2`,0)) AS TestedSyphilis2,
+sum(ifnull(`AnaemiaSevere2`,0)) AS AnaemiaSevere2,
+sum(ifnull(`AnaemiaSevere3`,0)) AS AnaemiaSevere3,
+sum(ifnull(`HyperTensionInduced2`,0)) AS HyperTensionInduced2,
+sum(ifnull(`HyperTensionInduced3`,0)) AS HyperTensionInduced3,
+sum(ifnull(`IdentifiedDiabetes2`,0)) AS IdentifiedDiabetes2,
+sum(ifnull(`IdentifiedDiabetes3`,0)) AS IdentifiedDiabetes3,
+sum(ifnull(`ReactiveHIV2`,0)) AS ReactiveHIV2,
+sum(ifnull(`ReactiveHIV3`,0)) AS ReactiveHIV3,
+sum(ifnull(`IdetifiedSyphilis2`,0)) AS IdetifiedSyphilis2,
+sum(ifnull(`IdetifiedSyphilis3`,0)) AS IdetifiedSyphilis3,
+sum(ifnull(`Hypothyroidism1`,0)) AS Hypothyroidism1,
+sum(ifnull(`Hypothyroidism2`,0)) AS Hypothyroidism2,
+sum(ifnull(`Hypothyroidism3`,0)) AS Hypothyroidism3,
+sum(ifnull(`Tuberculosis1`,0)) AS Tuberculosis1,
+sum(ifnull(`Tuberculosis2`,0)) AS Tuberculosis2,
+sum(ifnull(`Tuberculosis3`,0)) AS Tuberculosis3,
+sum(ifnull(`Malaria1`,0)) AS Malaria1,
+sum(ifnull(`Malaria2`,0)) AS Malaria2,
+sum(ifnull(`Malaria3`,0)) AS Malaria3,
+sum(ifnull(`LSCS1`,0)) AS LSCS1,
+sum(ifnull(`LSCS2`,0)) AS LSCS2,
+sum(ifnull(`LSCS3`,0)) AS LSCS3,
+sum(ifnull(`Obstetric1`,0)) AS Obstetric1,
+sum(ifnull(`Obstetric2`,0)) AS Obstetric2,
+sum(ifnull(`Obstetric3`,0)) AS Obstetric3,
+sum(ifnull(`HighRiskReferFacilities`,0)) AS HighRiskReferFacilities
+
+ FROM cmomonthlycheckup cmc
+ INNER JOIN monthlycheckup mc on cmc.monthlycheckupid=mc.monthlycheckupid
+ INNER JOIN entity e1 on e1.EntityID=mc.CMOEntityID
+INNER JOIN userentity useren on useren.EntityID=e1.EntityID
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE cmc.IsActive=1 AND mc.IsActive=1  
+ AND ( (parm_Month=0) OR (
+    STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+    STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+    LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+        ) 
+    )
+ GROUP BY e1.ParentEntityID
+) as pmsmastat on pmsmastat.ParentEntityID=ue.EntityID
+
+LEFT JOIN stateprofile sp ON ue.EntityID=sp.EntityID
+where u.isactive=1 and ue.isactive=1 and s.isactive=1
+AND (param_State=0 OR s.StateID=param_State)
+group by s.statename
+order by s.statename;
+
+
+END$$
+DELIMITER ;
+
+
+
+
+
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `FetchMinistryStatisticsWithDistrictType`(IN `parm_EntityID` INT, IN `parm_Month` INT, IN `parm_Year` INT, IN `parm_ToMonth` INT, IN `parm_ToYear` INT, IN `parm_Reg_Month` INT, IN `param_District` INT, IN `param_State` INT)
+    NO SQL
+BEGIN
+
+SELECT 
+s.StateName,d.DistrictName,
+CASE WHEN d.IsHighPriority=1 THEN 'HPD'
+WHEN d.IsHighPriority=0 THEN 'ND'
+END AS DistrictType,
+CASE WHEN cp.EntityID IS NULL THEN 'Pending' ELSE 'Submited' END AS ProfileStatus,
+(SELECT IFNULL(COUNT(v.VolunteerID),0) FROM volunteer v
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+WHERE v.IsActive=1 and e1.EntityID= ue.entityID  
+AND ( (parm_Month=0) OR (
+        DATE_FORMAT(v.Createdon,'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+	    LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_Reg_Month,'-',01), '%Y-%m-%d'))
+       )
+    )
+) AS `TotalVolunteerRegistered`,
+
+(SELECT IFNULL(COUNT(DISTINCT(v.VolunteerID)),0)
+from volunteer v 
+inner join volunteermontlycheckup vmc on v.volunteerid=vmc.volunteerid
+inner join monthlycheckup mc on mc.MonthlyCheckUpID=vmc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID 
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+where IsReportDesignatedDay=1 and vmc.PregnantWomenCount != 0 and v.IsActive=1 
+and vmc.IsActive=1 and e1.EntityID= ue.entityID
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+		LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+       ) 
+    )
+) as `TotalVolunteerProvideService`,
+
+(SELECT IFNULL(SUM(vc.PregnantWomenCount),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.EntityID= ue.entityID 
+AND ( (parm_Month=0) OR ( 
+		 STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+         STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+         LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+        ) 
+    )
+ ) AS `TotalPWSeenByVolunteer`,
+
+(SELECT IFNULL(SUM(vc.ServiceHours),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.EntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursVolunteers`,
+
+(SELECT IFNULL(SUM(vc.FreeUsgRadiologist),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.EntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursFreeRadio`,
+
+ (SELECT IFNULL(SUM(vc.FreeInvestPathologist),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.EntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursFreeInvestigation`,
+
+  ( SELECT IFNULL(COUNT(CMOFacilityID),0) FROM cmofacilities cmo
+INNER JOIN entity e on e.EntityID=cmo.CMOEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE cmo.IsActive=1 and e.EntityId=ue.entityID  
+AND ( (parm_Month=0) OR (
+          DATE_FORMAT(cmo.Createdon,'%Y-%m-%d') BETWEEN
+          STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+          LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+		) 
+    )
+) AS `PMSMAFacilitiesNumber`,
+
+  ( SELECT IFNULL(COUNT(GrievanceID),0) FROM grievance g
+INNER JOIN entity e on e.EntityID=g.AssignedToEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE g.IsActive=1 and e1.EntityID=ue.entityID  
+AND ( (parm_Month=0) OR (
+		DATE_FORMAT(g.Createdon,'%Y-%m-%d') 
+        BETWEEN STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+) AS `TotalGrievance`,
+
+   ( SELECT IFNULL(COUNT(GrievanceID),0) FROM grievance g 
+inner join typedetail td on td.typedetailid=g.StatustypeDetailID 
+INNER JOIN entity e on e.EntityID=g.AssignedToEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+WHERE g.IsActive=1 and td.TypeDetaillogicalcode='Pending' and e1.Entityid=ue.entityID  
+AND ( (parm_Month=0) OR (
+         DATE_FORMAT(g.Createdon,'%Y-%m-%d') 
+         BETWEEN STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+         LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+        ) 
+    )
+) AS `TotalGrievanceNotAnsward`,
+
+ifnull(`AntenatalCare`,0) AS AntenatalCare,
+ifnull(`AntenatalCareTrimester`,0) AS  AntenatalCareTrimester,
+ifnull(`ReceivedMCTS`,0) AS ReceivedMCTS,
+ifnull(`HaemoglobinChecked`,0) AS HaemoglobinChecked,
+ifnull(`UltraSoundConducted`,0) AS UltraSoundConducted,
+ifnull(`ScreenedHIV`,0) AS ScreenedHIV,
+ifnull(`TestedSyphilis`,0) AS TestedSyphilis,
+ifnull(`ScreenedGDM`,0) AS ScreenedGDM,
+ifnull(`AnaemiaSevere`,0) AS AnaemiaSevere,
+ifnull(`HyperTensionInduced`,0) AS HyperTensionInduced,
+ifnull(`IdentifiedDiabetes`,0) AS IdentifiedDiabetes,
+ifnull(`ReactiveHIV`,0) AS ReactiveHIV,
+ifnull(`IdetifiedSyphilis`,0) AS IdetifiedSyphilis,
+ifnull(`HighRiskPregnancies`,0) AS HighRiskPregnancies,
+ifnull(`HighRiskPregnanciesFacilities`,0) AS HighRiskPregnanciesFacilities,
+
+ifnull(`PWLeftOut`,0) AS PWLeftOut,
+ifnull(`AncByObgyn`,0) AS AncByObgyn,
+ifnull(`AncByMbbs`,0) AS AncByMbbs,
+ifnull(`BloodGroupChecked`,0) AS BloodGroupChecked,
+ifnull(`UrineAlbuminChecked`,0) AS UrineAlbuminChecked,
+ifnull(`UltraSoundConducted2`,0) AS UltraSoundConducted2,
+ifnull(`ScreenedHIV2`,0) AS ScreenedHIV2,
+ifnull(`TestedSyphilis2`,0) AS TestedSyphilis2,
+ifnull(`AnaemiaSevere2`,0) AS AnaemiaSevere2,
+ifnull(`AnaemiaSevere3`,0) AS AnaemiaSevere3,
+ifnull(`HyperTensionInduced2`,0) AS HyperTensionInduced2,
+ifnull(`HyperTensionInduced3`,0) AS HyperTensionInduced3,
+ifnull(`IdentifiedDiabetes2`,0) AS IdentifiedDiabetes2,
+ifnull(`IdentifiedDiabetes3`,0) AS IdentifiedDiabetes3,
+ifnull(`ReactiveHIV2`,0) AS ReactiveHIV2,
+ifnull(`ReactiveHIV3`,0) AS ReactiveHIV3,
+ifnull(`IdetifiedSyphilis2`,0) AS IdetifiedSyphilis2,
+ifnull(`IdetifiedSyphilis3`,0) AS IdetifiedSyphilis3,
+ifnull(`Hypothyroidism1`,0) AS Hypothyroidism1,
+ifnull(`Hypothyroidism2`,0) AS Hypothyroidism2,
+ifnull(`Hypothyroidism3`,0) AS Hypothyroidism3,
+ifnull(`Tuberculosis1`,0) AS Tuberculosis1,
+ifnull(`Tuberculosis2`,0) AS Tuberculosis2,
+ifnull(`Tuberculosis3`,0) AS Tuberculosis3,
+ifnull(`Malaria1`,0) AS Malaria1,
+ifnull(`Malaria2`,0) AS Malaria2,
+ifnull(`Malaria3`,0) AS Malaria3,
+ifnull(`LSCS1`,0) AS LSCS1,
+ifnull(`LSCS2`,0) AS LSCS2,
+ifnull(`LSCS3`,0) AS LSCS3,
+ifnull(`Obstetric1`,0) AS Obstetric1,
+ifnull(`Obstetric2`,0) AS Obstetric2,
+ifnull(`Obstetric3`,0) AS Obstetric3,
+ifnull(`HighRiskReferFacilities`,0) AS HighRiskReferFacilities
+
+from  userdistrict u
+inner join userentity ue on u.userid=ue.userid
+inner join district d on d.DistrictID=u.DistrictID and d.DistrictID is not null AND d.IsHighPriority=1
+inner join states s on s.stateid=d.stateid and s.stateid is not null
+left join     (SELECT e1.EntityID,
+
+sum(ifnull(`AntenatalCare`,0)) AS AntenatalCare,
+sum(ifnull(`AntenatalCareTrimester`,0)) AS  AntenatalCareTrimester,
+sum(ifnull(`ReceivedMCTS`,0)) AS ReceivedMCTS,
+sum(ifnull(`HaemoglobinChecked`,0)) AS HaemoglobinChecked,
+sum(ifnull(`UltraSoundConducted`,0)) AS UltraSoundConducted,
+sum(ifnull(`ScreenedHIV`,0)) AS ScreenedHIV,
+sum(ifnull(`TestedSyphilis`,0)) AS TestedSyphilis,
+sum(ifnull(`ScreenedGDM`,0)) AS ScreenedGDM,
+sum(ifnull(`AnaemiaSevere`,0)) AS AnaemiaSevere,
+sum(ifnull(`HyperTensionInduced`,0)) AS HyperTensionInduced,
+sum(ifnull(`IdentifiedDiabetes`,0)) AS IdentifiedDiabetes,
+sum(ifnull(`ReactiveHIV`,0)) AS ReactiveHIV,
+sum(ifnull(`IdetifiedSyphilis`,0)) AS IdetifiedSyphilis,
+sum(ifnull(`AnaemiaSevere`,0))+sum(ifnull(`IdentifiedDiabetes`,0))+ sum(ifnull(`ReactiveHIV`,0))+ sum(ifnull(`IdetifiedSyphilis`,0))+sum(ifnull(`HyperTensionInduced`,0)) AS HighRiskPregnancies,
+sum(ifnull(`HighRiskPregnanciesFacilities`,0)) AS HighRiskPregnanciesFacilities,
+
+sum(ifnull(`PWLeftOut`,0)) AS PWLeftOut,
+sum(ifnull(`AncByObgyn`,0)) AS AncByObgyn,
+sum(ifnull(`AncByMbbs`,0)) AS AncByMbbs,
+sum(ifnull(`BloodGroupChecked`,0)) AS BloodGroupChecked,
+sum(ifnull(`UrineAlbuminChecked`,0)) AS UrineAlbuminChecked,
+sum(ifnull(`UltraSoundConducted2`,0)) AS UltraSoundConducted2,
+sum(ifnull(`ScreenedHIV2`,0)) AS ScreenedHIV2,
+sum(ifnull(`TestedSyphilis2`,0)) AS TestedSyphilis2,
+sum(ifnull(`AnaemiaSevere2`,0)) AS AnaemiaSevere2,
+sum(ifnull(`AnaemiaSevere3`,0)) AS AnaemiaSevere3,
+sum(ifnull(`HyperTensionInduced2`,0)) AS HyperTensionInduced2,
+sum(ifnull(`HyperTensionInduced3`,0)) AS HyperTensionInduced3,
+sum(ifnull(`IdentifiedDiabetes2`,0)) AS IdentifiedDiabetes2,
+sum(ifnull(`IdentifiedDiabetes3`,0)) AS IdentifiedDiabetes3,
+sum(ifnull(`ReactiveHIV2`,0)) AS ReactiveHIV2,
+sum(ifnull(`ReactiveHIV3`,0)) AS ReactiveHIV3,
+sum(ifnull(`IdetifiedSyphilis2`,0)) AS IdetifiedSyphilis2,
+sum(ifnull(`IdetifiedSyphilis3`,0)) AS IdetifiedSyphilis3,
+sum(ifnull(`Hypothyroidism1`,0)) AS Hypothyroidism1,
+sum(ifnull(`Hypothyroidism2`,0)) AS Hypothyroidism2,
+sum(ifnull(`Hypothyroidism3`,0)) AS Hypothyroidism3,
+sum(ifnull(`Tuberculosis1`,0)) AS Tuberculosis1,
+sum(ifnull(`Tuberculosis2`,0)) AS Tuberculosis2,
+sum(ifnull(`Tuberculosis3`,0)) AS Tuberculosis3,
+sum(ifnull(`Malaria1`,0)) AS Malaria1,
+sum(ifnull(`Malaria2`,0)) AS Malaria2,
+sum(ifnull(`Malaria3`,0)) AS Malaria3,
+sum(ifnull(`LSCS1`,0)) AS LSCS1,
+sum(ifnull(`LSCS2`,0)) AS LSCS2,
+sum(ifnull(`LSCS3`,0)) AS LSCS3,
+sum(ifnull(`Obstetric1`,0)) AS Obstetric1,
+sum(ifnull(`Obstetric2`,0)) AS Obstetric2,
+sum(ifnull(`Obstetric3`,0)) AS Obstetric3,
+sum(ifnull(`HighRiskReferFacilities`,0)) AS HighRiskReferFacilities
+    
+ FROM cmomonthlycheckup cmc
+ INNER JOIN monthlycheckup mc on cmc.monthlycheckupid=mc.monthlycheckupid
+ INNER JOIN entity e1 on e1.EntityID=mc.CMOEntityID
+INNER JOIN userentity useren on useren.EntityID=e1.EntityID
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.IsHighPriority=1
+ WHERE cmc.IsActive=1 AND mc.IsActive=1  
+ AND ( (parm_Month=0) OR (
+		STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+		STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+		LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+        ) 
+    )
+ GROUP BY e1.EntityID
+) as pmsmastat on pmsmastat.EntityID=ue.EntityID
+
+LEFT JOIN cmoprofile cp ON ue.EntityID=cp.EntityID
+where u.isactive=1 and ue.isactive=1 and s.isactive=1 
+and (param_District=0 OR d.DistrictID=param_District) 
+and (param_State=0 OR s.StateID=param_State)
+order by s.StateName,d.DistrictName asc;
+END$$
+DELIMITER ;
+
+
+
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `FetchMinistryStatisticsWithDistrictTypeAsp`(IN `parm_EntityID` INT, IN `parm_Month` INT, IN `parm_Year` INT, IN `parm_ToMonth` INT, IN `parm_ToYear` INT, IN `parm_Reg_Month` INT, IN `param_District` INT, IN `param_State` INT)
+    NO SQL
+BEGIN
+
+SELECT 
+s.StateName,d.DistrictName,
+CASE WHEN d.Aspirational=1 THEN 'HPD'
+WHEN d.Aspirational=0 THEN 'ND'
+END AS DistrictType,
+CASE WHEN cp.EntityID IS NULL THEN 'Pending' ELSE 'Submited' END AS ProfileStatus,
+(SELECT IFNULL(COUNT(v.VolunteerID),0) FROM volunteer v
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+WHERE v.IsActive=1 and e1.EntityID= ue.entityID  
+AND ( (parm_Month=0) OR (
+        DATE_FORMAT(v.Createdon,'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+	    LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_Reg_Month,'-',01), '%Y-%m-%d'))
+       )
+    )
+) AS `TotalVolunteerRegistered`,
+
+(SELECT IFNULL(COUNT(DISTINCT(v.VolunteerID)),0)
+from volunteer v 
+inner join volunteermontlycheckup vmc on v.volunteerid=vmc.volunteerid
+inner join monthlycheckup mc on mc.MonthlyCheckUpID=vmc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID 
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+where IsReportDesignatedDay=1 and vmc.PregnantWomenCount != 0 and v.IsActive=1 
+and vmc.IsActive=1 and e1.EntityID= ue.entityID
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+		LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+       ) 
+    )
+) as `TotalVolunteerProvideService`,
+
+(SELECT IFNULL(SUM(vc.PregnantWomenCount),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.EntityID= ue.entityID 
+AND ( (parm_Month=0) OR ( 
+		 STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+         STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+         LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+        ) 
+    )
+ ) AS `TotalPWSeenByVolunteer`,
+
+(SELECT IFNULL(SUM(vc.ServiceHours),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.EntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursVolunteers`,
+
+(SELECT IFNULL(SUM(vc.FreeUsgRadiologist),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.EntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursFreeRadio`,
+
+ (SELECT IFNULL(SUM(vc.FreeInvestPathologist),0) FROM volunteer v 
+INNER JOIN volunteermontlycheckup vc ON v.VolunteerID=vc.VolunteerID
+ inner join monthlycheckup mc on mc.MonthlyCheckUpID=vc.MonthlyCheckUpID
+INNER JOIN entity e on e.EntityID=v.EntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE v.IsActive=1 AND vc.IsActive=1 and e1.EntityID= ue.entityID 
+AND ( (parm_Month=0) OR (
+        STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+        STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+ ) AS `TotalNoHoursFreeInvestigation`,
+
+  ( SELECT IFNULL(COUNT(CMOFacilityID),0) FROM cmofacilities cmo
+INNER JOIN entity e on e.EntityID=cmo.CMOEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE cmo.IsActive=1 and e.EntityId=ue.entityID  
+AND ( (parm_Month=0) OR (
+          DATE_FORMAT(cmo.Createdon,'%Y-%m-%d') BETWEEN
+          STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+          LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+		) 
+    )
+) AS `PMSMAFacilitiesNumber`,
+
+  ( SELECT IFNULL(COUNT(GrievanceID),0) FROM grievance g
+INNER JOIN entity e on e.EntityID=g.AssignedToEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE g.IsActive=1 and e1.EntityID=ue.entityID  
+AND ( (parm_Month=0) OR (
+		DATE_FORMAT(g.Createdon,'%Y-%m-%d') 
+        BETWEEN STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+        LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+       ) 
+    )
+) AS `TotalGrievance`,
+
+   ( SELECT IFNULL(COUNT(GrievanceID),0) FROM grievance g 
+inner join typedetail td on td.typedetailid=g.StatustypeDetailID 
+INNER JOIN entity e on e.EntityID=g.AssignedToEntityID
+INNER JOIN entity e1 on e1.EntityID=e.parententityid
+INNER JOIN userentity useren on useren.EntityID=e.parententityid
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+WHERE g.IsActive=1 and td.TypeDetaillogicalcode='Pending' and e1.Entityid=ue.entityID  
+AND ( (parm_Month=0) OR (
+         DATE_FORMAT(g.Createdon,'%Y-%m-%d') 
+         BETWEEN STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+         LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d')) 
+        ) 
+    )
+) AS `TotalGrievanceNotAnsward`,
+
+ifnull(`AntenatalCare`,0) AS AntenatalCare,
+ifnull(`AntenatalCareTrimester`,0) AS  AntenatalCareTrimester,
+ifnull(`ReceivedMCTS`,0) AS ReceivedMCTS,
+ifnull(`HaemoglobinChecked`,0) AS HaemoglobinChecked,
+ifnull(`UltraSoundConducted`,0) AS UltraSoundConducted,
+ifnull(`ScreenedHIV`,0) AS ScreenedHIV,
+ifnull(`TestedSyphilis`,0) AS TestedSyphilis,
+ifnull(`ScreenedGDM`,0) AS ScreenedGDM,
+ifnull(`AnaemiaSevere`,0) AS AnaemiaSevere,
+ifnull(`HyperTensionInduced`,0) AS HyperTensionInduced,
+ifnull(`IdentifiedDiabetes`,0) AS IdentifiedDiabetes,
+ifnull(`ReactiveHIV`,0) AS ReactiveHIV,
+ifnull(`IdetifiedSyphilis`,0) AS IdetifiedSyphilis,
+ifnull(`HighRiskPregnancies`,0) AS HighRiskPregnancies,
+ifnull(`HighRiskPregnanciesFacilities`,0) AS HighRiskPregnanciesFacilities,
+
+ifnull(`PWLeftOut`,0) AS PWLeftOut,
+ifnull(`AncByObgyn`,0) AS AncByObgyn,
+ifnull(`AncByMbbs`,0) AS AncByMbbs,
+ifnull(`BloodGroupChecked`,0) AS BloodGroupChecked,
+ifnull(`UrineAlbuminChecked`,0) AS UrineAlbuminChecked,
+ifnull(`UltraSoundConducted2`,0) AS UltraSoundConducted2,
+ifnull(`ScreenedHIV2`,0) AS ScreenedHIV2,
+ifnull(`TestedSyphilis2`,0) AS TestedSyphilis2,
+ifnull(`AnaemiaSevere2`,0) AS AnaemiaSevere2,
+ifnull(`AnaemiaSevere3`,0) AS AnaemiaSevere3,
+ifnull(`HyperTensionInduced2`,0) AS HyperTensionInduced2,
+ifnull(`HyperTensionInduced3`,0) AS HyperTensionInduced3,
+ifnull(`IdentifiedDiabetes2`,0) AS IdentifiedDiabetes2,
+ifnull(`IdentifiedDiabetes3`,0) AS IdentifiedDiabetes3,
+ifnull(`ReactiveHIV2`,0) AS ReactiveHIV2,
+ifnull(`ReactiveHIV3`,0) AS ReactiveHIV3,
+ifnull(`IdetifiedSyphilis2`,0) AS IdetifiedSyphilis2,
+ifnull(`IdetifiedSyphilis3`,0) AS IdetifiedSyphilis3,
+ifnull(`Hypothyroidism1`,0) AS Hypothyroidism1,
+ifnull(`Hypothyroidism2`,0) AS Hypothyroidism2,
+ifnull(`Hypothyroidism3`,0) AS Hypothyroidism3,
+ifnull(`Tuberculosis1`,0) AS Tuberculosis1,
+ifnull(`Tuberculosis2`,0) AS Tuberculosis2,
+ifnull(`Tuberculosis3`,0) AS Tuberculosis3,
+ifnull(`Malaria1`,0) AS Malaria1,
+ifnull(`Malaria2`,0) AS Malaria2,
+ifnull(`Malaria3`,0) AS Malaria3,
+ifnull(`LSCS1`,0) AS LSCS1,
+ifnull(`LSCS2`,0) AS LSCS2,
+ifnull(`LSCS3`,0) AS LSCS3,
+ifnull(`Obstetric1`,0) AS Obstetric1,
+ifnull(`Obstetric2`,0) AS Obstetric2,
+ifnull(`Obstetric3`,0) AS Obstetric3,
+ifnull(`HighRiskReferFacilities`,0) AS HighRiskReferFacilities
+
+from  userdistrict u
+inner join userentity ue on u.userid=ue.userid
+inner join district d on d.DistrictID=u.DistrictID and d.DistrictID is not null AND d.Aspirational=1
+inner join states s on s.stateid=d.stateid and s.stateid is not null
+left join     (SELECT e1.EntityID,
+
+sum(ifnull(`AntenatalCare`,0)) AS AntenatalCare,
+sum(ifnull(`AntenatalCareTrimester`,0)) AS  AntenatalCareTrimester,
+sum(ifnull(`ReceivedMCTS`,0)) AS ReceivedMCTS,
+sum(ifnull(`HaemoglobinChecked`,0)) AS HaemoglobinChecked,
+sum(ifnull(`UltraSoundConducted`,0)) AS UltraSoundConducted,
+sum(ifnull(`ScreenedHIV`,0)) AS ScreenedHIV,
+sum(ifnull(`TestedSyphilis`,0)) AS TestedSyphilis,
+sum(ifnull(`ScreenedGDM`,0)) AS ScreenedGDM,
+sum(ifnull(`AnaemiaSevere`,0)) AS AnaemiaSevere,
+sum(ifnull(`HyperTensionInduced`,0)) AS HyperTensionInduced,
+sum(ifnull(`IdentifiedDiabetes`,0)) AS IdentifiedDiabetes,
+sum(ifnull(`ReactiveHIV`,0)) AS ReactiveHIV,
+sum(ifnull(`IdetifiedSyphilis`,0)) AS IdetifiedSyphilis,
+sum(ifnull(`AnaemiaSevere`,0))+sum(ifnull(`IdentifiedDiabetes`,0))+ sum(ifnull(`ReactiveHIV`,0))+ sum(ifnull(`IdetifiedSyphilis`,0))+sum(ifnull(`HyperTensionInduced`,0)) AS HighRiskPregnancies,
+sum(ifnull(`HighRiskPregnanciesFacilities`,0)) AS HighRiskPregnanciesFacilities,
+
+sum(ifnull(`PWLeftOut`,0)) AS PWLeftOut,
+sum(ifnull(`AncByObgyn`,0)) AS AncByObgyn,
+sum(ifnull(`AncByMbbs`,0)) AS AncByMbbs,
+sum(ifnull(`BloodGroupChecked`,0)) AS BloodGroupChecked,
+sum(ifnull(`UrineAlbuminChecked`,0)) AS UrineAlbuminChecked,
+sum(ifnull(`UltraSoundConducted2`,0)) AS UltraSoundConducted2,
+sum(ifnull(`ScreenedHIV2`,0)) AS ScreenedHIV2,
+sum(ifnull(`TestedSyphilis2`,0)) AS TestedSyphilis2,
+sum(ifnull(`AnaemiaSevere2`,0)) AS AnaemiaSevere2,
+sum(ifnull(`AnaemiaSevere3`,0)) AS AnaemiaSevere3,
+sum(ifnull(`HyperTensionInduced2`,0)) AS HyperTensionInduced2,
+sum(ifnull(`HyperTensionInduced3`,0)) AS HyperTensionInduced3,
+sum(ifnull(`IdentifiedDiabetes2`,0)) AS IdentifiedDiabetes2,
+sum(ifnull(`IdentifiedDiabetes3`,0)) AS IdentifiedDiabetes3,
+sum(ifnull(`ReactiveHIV2`,0)) AS ReactiveHIV2,
+sum(ifnull(`ReactiveHIV3`,0)) AS ReactiveHIV3,
+sum(ifnull(`IdetifiedSyphilis2`,0)) AS IdetifiedSyphilis2,
+sum(ifnull(`IdetifiedSyphilis3`,0)) AS IdetifiedSyphilis3,
+sum(ifnull(`Hypothyroidism1`,0)) AS Hypothyroidism1,
+sum(ifnull(`Hypothyroidism2`,0)) AS Hypothyroidism2,
+sum(ifnull(`Hypothyroidism3`,0)) AS Hypothyroidism3,
+sum(ifnull(`Tuberculosis1`,0)) AS Tuberculosis1,
+sum(ifnull(`Tuberculosis2`,0)) AS Tuberculosis2,
+sum(ifnull(`Tuberculosis3`,0)) AS Tuberculosis3,
+sum(ifnull(`Malaria1`,0)) AS Malaria1,
+sum(ifnull(`Malaria2`,0)) AS Malaria2,
+sum(ifnull(`Malaria3`,0)) AS Malaria3,
+sum(ifnull(`LSCS1`,0)) AS LSCS1,
+sum(ifnull(`LSCS2`,0)) AS LSCS2,
+sum(ifnull(`LSCS3`,0)) AS LSCS3,
+sum(ifnull(`Obstetric1`,0)) AS Obstetric1,
+sum(ifnull(`Obstetric2`,0)) AS Obstetric2,
+sum(ifnull(`Obstetric3`,0)) AS Obstetric3,
+sum(ifnull(`HighRiskReferFacilities`,0)) AS HighRiskReferFacilities
+    
+ FROM cmomonthlycheckup cmc
+ INNER JOIN monthlycheckup mc on cmc.monthlycheckupid=mc.monthlycheckupid
+ INNER JOIN entity e1 on e1.EntityID=mc.CMOEntityID
+INNER JOIN userentity useren on useren.EntityID=e1.EntityID
+INNER JOIN userdistrict usrd on usrd.UserID=useren.UserID AND usrd.DistrictID>0
+INNER JOIN district on district.DistrictID=usrd.DistrictID AND district.Aspirational=1
+ WHERE cmc.IsActive=1 AND mc.IsActive=1  
+ AND ( (parm_Month=0) OR (
+		STR_TO_DATE(CONCAT(mc.Year,'-',mc.Month,'-','02'),'%Y-%m-%d') BETWEEN 
+		STR_TO_DATE(CONCAT(parm_Year,'-',parm_Month,'-',01), '%Y-%m-%d') AND 
+		LAST_DAY(STR_TO_DATE(CONCAT(parm_ToYear,'-',parm_ToMonth,'-',01), '%Y-%m-%d'))
+        ) 
+    )
+ GROUP BY e1.EntityID
+) as pmsmastat on pmsmastat.EntityID=ue.EntityID
+
+LEFT JOIN cmoprofile cp ON ue.EntityID=cp.EntityID
+where u.isactive=1 and ue.isactive=1 and s.isactive=1 
+and (param_District=0 OR d.DistrictID=param_District) 
+and (param_State=0 OR s.StateID=param_State)
+order by s.StateName,d.DistrictName asc;
+END$$
+DELIMITER ;
