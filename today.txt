@@ -1,4 +1,17 @@
-
+                        <select class="form-control"  name="district_type" id="district_type" onchange="loadDistrict(document.getElementById('search-by-state'),'search-by-district')">
+                        	    <?php
+								$district_type="";
+								if(isset($_REQUEST['district_type'])){
+									$district_type = $_REQUEST['district_type'];
+								}
+								?>
+							<option value='1' <?php if($district_type=='1'){ echo 'selected="selected"'; } ?> >All</option>
+							<option value='2' <?php if($district_type=='2'){ echo 'selected="selected"'; } ?>>Aspirational</option>
+							<option value='3' <?php if($district_type=='3'){ echo 'selected="selected"'; } ?>>High Priority</option>
+                        </select>
+			
+			
+			
 ALTER TABLE `district` ADD `Aspirational` BIT(1) NOT NULL DEFAULT b'0' AFTER `IsHighPriority`; 
  
 		if($this->input->post('district_type')>1){
