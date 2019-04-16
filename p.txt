@@ -1,0 +1,379 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+include_once("CommonController.php");
+
+class FacilityScript extends CommonController
+{
+	public function __construct()
+	{
+		parent :: __construct();
+		$this->load->model("FacilityModel");
+	}
+	
+	public function index()
+	{
+		//for creating new user
+		error_reporting(E_ALL);
+		if(!empty($this->input->get_post('save')) && $this->input->get_post('facility')>0){
+			$facilityId=$this->input->get_post('facility');
+			$temp_ar = array();
+			$created_cnt = 0;
+			$not_created_cnt = 0;
+			$sql="SELECT cmofacilities.FacilityID,cmofacilities.CMOEntityID,facilities.FacilityName 
+	FROM cmofacilities 
+	INNER JOIN facilities ON cmofacilities.FacilityID=facilities.FacilityID
+	LEFT JOIN entity on(cmofacilities.FacilityID=entity.FacilityID AND entity.IsActive=1)
+	WHERE cmofacilities.IsActive=1 AND cmofacilities.FacilityID IN($facilityId) AND entity.entityid IS NULL order by facilities.StateID,facilities.DistrictID";
+		} else {
+			$temp_ar = array();
+			$created_cnt = 0;
+			$not_created_cnt = 0;
+			$sql="SELECT cmofacilities.FacilityID,cmofacilities.CMOEntityID,facilities.FacilityName 
+	FROM cmofacilities 
+	INNER JOIN facilities ON cmofacilities.FacilityID=facilities.FacilityID
+	LEFT JOIN entity on(cmofacilities.FacilityID=entity.FacilityID AND entity.IsActive=1)
+	WHERE cmofacilities.IsActive=1 AND cmofacilities.FacilityID IN(231048,231049,231050,33923) AND entity.entityid IS NULL order by facilities.StateID,facilities.DistrictID";			
+		}		
+	    $data = $this->getRecord($sql, NULL);
+	    //echo $sql;   print_r($data); die;
+
+	    if(empty($data)){
+	    	echo "<script>alert('facility user already created')</script>";
+	    } else {
+		ob_clean();
+		$filename = "facility-user-details".time().".xls";		 
+		header("Content-Type: application/vnd.ms-excel");
+		header("Content-Disposition: attachment; filename=\"$filename\"");		
+		echo implode("\t", array("State","District","Facility","Username","Password")) ." \n";		
+		foreach($data as $data_obj)
+		{
+			$name = '';
+			$temp_ar[$data_obj->FacilityID] = $this->createRandamPassword();
+			$final_user = $this->FacilityModel->createFacilityUser($temp_ar,$data_obj->CMOEntityID,0);
+			if(count($final_user) > 0)
+			{
+				$en_id = $data_obj->CMOEntityID;
+				$facilityName = $data_obj->FacilityName;
+				$district_data = $this->getRecord("select states.StateName,district.districtname from district
+													inner join userdistrict on district.districtid=userdistrict.districtid
+													inner join userentity on userdistrict.userid=userentity.userid
+													inner join states on district.StateID=states.StateID
+													where userentity.entityid=$en_id", NULL);
+				foreach($district_data as $obj){
+					$name = $obj->districtname;
+					$nameState = $obj->StateName;
+				}
+						
+				foreach($final_user[0] as $k=>$v)
+				{
+					echo implode("\t", array("$nameState","$name","$facilityName","$k","$v")) ." \n";
+				}
+				$created_cnt++;
+			} else{
+				$not_created_cnt++;			
+				unset($temp_ar);
+				unset($final_user);				
+			}
+
+		}	    	
+	    }
+	    redirect('FacilityScript/addfacilityuser', 'refresh');
+		exit;
+	}
+	function addfacilityuser(){
+		$data['states'] = $this->getState();
+		$data['facility_type'] = $this->getCMOFacilityTypeForSelect();
+		$this->load->view('script/facility-user-create', $data);
+	}
+	public function getCMOFacilityTypeForSelect(){
+		$facilitytype = 'FacilityType';
+		$Query="SELECT td.TypedetailID,td.TypedetailCode FROM typemaster AS tm INNER JOIN typedetail td ON tm.typemasterID=td.typemasterID where tm.TypeMasterCode='$facilitytype' AND tm.IsActive=1";
+		return $this->getRecord($Query, NULL);
+	}
+	public function getFacilityName()
+	{             
+		 if(!empty($this->input->get_post('StateKey'))){
+		 $cond='';
+		 $temp_array = array();
+		 $State_ID=$this->input->get_post('StateKey');
+		 $District_ID=$this->input->get_post('DistrictKey');
+		 $block_ID=$this->input->get_post('BlockKey');
+		 $taluka_Id=$this->input->get_post('TalukaKey');
+		 $facilitytype_id=$this->input->get_post('FacilityTypeKey');
+
+		 if(!empty($State_ID))
+		 {
+			$cond.=" AND facilities.StateID=$State_ID";
+		 }
+		 if(!empty($District_ID))
+		 {
+			$cond.=" AND facilities.DistrictID=$District_ID";
+		 }
+		 if(!empty($block_ID)){
+			
+			$cond .=" AND facilities.BlockID='".$block_ID."'";
+		 }
+		 if(!empty($taluka_Id)){
+			
+			$cond .=" AND facilities.talukaId='".$taluka_Id."'";
+		 }
+		 if(!empty($facilitytype_id))
+		 { 
+		   $cond .=" AND facilities.FacilityTypeDetailID='".$facilitytype_id."'"; 
+		 }
+		  
+		$Query="SELECT facilities.FacilityID,facilities.FacilityName,entity.EntityID FROM facilities inner join cmofacilities on(cmofacilities.FacilityID=facilities.FacilityID AND cmofacilities.IsActive=1) LEFT JOIN entity on(cmofacilities.FacilityID=entity.FacilityID AND entity.IsActive=1) WHERE facilities.IsActive=1 $cond ORDER BY facilities.FacilityName";
+		 $districts = $this->getRecord($Query, NULL);
+		 $options="<option>Select Facility Name</option>";
+		
+		 if(!empty($districts)){
+			 
+			foreach($districts as $district)
+                        {
+                          $temp_array['Facility'][] = array("FacilityID"=>"$district->FacilityID","FacilityName"=>"$district->FacilityName");			 
+                          $facUser=!empty($district->EntityID)?'user':'';
+                          $options .='<option value="'.$district->FacilityID.'">'.$district->FacilityName.' - '.$facUser.'</option>';
+		        } 
+		 }
+		if(empty($facilitytypeID)){
+			echo $options;
+		}else{
+			echo json_encode($temp_array);
+                } 		 	
+		 }
+
+
+	}
+
+} 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+include(HEADER);
+?>
+<section class="middlecontent">
+  <div class="container">
+    <div class="pagewithsidebar">
+      <div class="hero-title">
+        <div class="col-md-8 col-sm-6 col-xs-12 ad-tilte">Welcome User</div>
+        <div class="col-md-4 toplinks">
+          <?php  include(TOPLINKS); ?>
+        </div>
+      </div>
+	  <div class="page-content mt">
+	  <div class="row">
+        <div class="col-md-3 col-sm-3 col-xs-12">
+		  <div class="left-side">
+            <?php include(LEFT_SIDE_BAR); ?>
+          </div>
+        </div>
+	<div class="col-md-9 col-sm-9 col-xs-12">
+    <div class="right-side cmo-prfile">
+    <div class="content">
+      <form action="index" method="post" id="userform" name="userform" enctype="multipart/form-data">
+          <input type="hidden" name="<?php echo csrfname ?>" value="<?php echo csrfhash ?>" class="csrf_val" />
+		  <h3 class="pagetitle">ADD Facility User</h3>
+             <div class="form-content">
+			   <div class="row mt25">
+				   <div class="form-group row">
+					 <label class="col-md-3 control-label">State: </label>
+					 <div class="col-md-7">
+					 	<select class="form-control" name="state" id="state" onchange="loadDistrict(this,'district')">
+							<option value="0">Select State</option>
+							<?php
+								if(count($states) > 0)
+								{
+									foreach($states as $obj)
+									{
+										echo "<option value='$obj->StateID'>".$obj->StateName."</option>";
+									}
+								}
+							?>
+						</select>						
+					 </div>
+				  </div>			   	
+				  <div class="form-group row">
+					 <label class="col-md-3 control-label">District: </label>
+					 <div class="col-md-7">
+						<select class="form-control" id="district" onChange="gettalkua(this,'taluka')" name="district">
+							<option value="0">Select District</option>
+						</select>						
+					 </div>
+				  </div>
+				  <div class="form-group row">
+					 <label class="col-md-3 control-label">Taluka: </label>
+					 <div class="col-md-7">
+						<select class="form-control" id="taluka" onChange="getblock(this,'block')" name="taluka">
+							<option value="0">Select Taluka</option>
+						</select>						
+					 </div>
+				  </div>
+				  <div class="form-group row">
+					 <label class="col-md-3 control-label">Block: </label>
+					 <div class="col-md-7">
+						<select class="form-control" id="block" onChange="getdata(this)" name="block">
+							<option value="0">Select Block</option>
+						</select>						
+					 </div>
+				  </div>
+				  <div class="form-group row">
+					 <label class="col-md-3 control-label">Facility Type: </label>
+					 <div class="col-md-7">
+						<select class="form-control" id="facilitytype" onChange="getdata(this)" name="facilitytype">
+							<option value="0">Facility Type</option>
+							<?php 
+							if(isset($facility_type) && count($facility_type)>0){
+							 foreach($facility_type as $obj){
+								echo '<option value="'.$obj->TypedetailID.'" >'.$obj->TypedetailCode.'</option>';
+							 }								
+							}
+							?>
+						</select>						
+					 </div>
+				  </div>
+				  <div class="form-group row">
+					 <label class="col-md-3 control-label">Facility: </label>
+					 <div class="col-md-7">
+						<select class="form-control" id="facility" onChange="" name="facility">
+							<option value="0">Select Facility</option>
+						</select>						
+					 </div>
+				  </div>
+				  <div class="form-group row">
+				  	<label class="col-md-3 control-label"></label>
+					 <div class="col-md-7">
+						<input class="btn-new btn-custom full-width" type="submit" name="save" id="save" value="save">
+					 </div>
+				  </div>
+
+			   </div>	
+            </div>
+        </form>
+        
+	   </div>
+	   </div>
+	   </div>
+	   </div>
+      </div> 
+	 </div>
+    </div> 
+  </div>
+</section>
+<!-- pop up -->
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+<script src="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.9/jquery-ui.js" type="text/javascript"></script>
+<link href="http://ajax.aspnetcdn.com/ajax/jquery.ui/1.8.9/themes/blitzer/jquery-ui.css" rel="stylesheet" type="text/css" /> 
+
+<!-- popup end -->
+<?php include(FOOTER); ?>
+<script type="text/javascript">
+function facilityName(){
+	var DistrictID ="";
+	var TalukaID="";
+	var BlockID ="";
+	var FaciliyTypeID="";
+	if(jQuery.isNumeric(jQuery('#state').val())){
+		StateID = jQuery('#state').val();	
+	}
+	if(jQuery.isNumeric(jQuery('#district').val())){
+		DistrictID = jQuery('#district').val();	
+	}
+	if(jQuery.isNumeric(jQuery('#taluka').val())){
+		TalukaID = jQuery('#taluka').val();	
+	}	
+	if(jQuery.isNumeric(jQuery('#block').val())){
+	   BlockID = jQuery('#block').val();	
+	}
+	if(jQuery.isNumeric(jQuery('#facilitytype').val())){
+		FaciliyTypeID = jQuery('#facilitytype').val();
+	}	
+	 jQuery.ajax({
+        url: "<?php echo base_url("FacilityScript/getFacilityName"); ?>",
+        type: 'get',
+        data: {
+            StateKey: StateID,
+            DistrictKey: DistrictID,
+			TalukaKey: TalukaID,
+			BlockKey: BlockID,
+			FacilityTypeKey: FaciliyTypeID
+        },
+		async: false,        
+        success: function (data) {
+		   jQuery('#facility').html(data);		
+        },
+		error: function (data){			
+			console.log(data);			
+		}	
+    });
+}	
+
+function loadDistrict(state,districtto){
+	var urlloc="<?php echo base_url("CommonController/getDistrictFromState"); ?>";
+	var action="getDistrict";
+	fetch_select(state,districtto,urlloc,action);
+	facilityName();
+}
+function gettalkua(dis,talukato){
+	 jQuery('#block').html("<option>Select Block</option>");
+     var DistrictID = jQuery('#district').val();
+	 facilityName();
+	 jQuery.ajax({
+        url: '<?php echo site_url('CMOController/getCMOTaluka'); ?>',
+        type: 'get',
+        data: {
+            key: DistrictID
+        },
+		async: false,
+        dataType: 'json',
+        success: function (data) {
+		   jQuery('#taluka').html(data);		
+        },
+		error: function (data){			
+			console.log(data);			
+		}		
+    });	
+}
+function getblock(){
+	 jQuery('#block').html("<option>Select Block</option>");
+	 var DistrictID = jQuery('#taluka').val();
+	 facilityName();
+	 jQuery.ajax({
+        url: "<?php echo base_url("CMOController/getCMOBlock"); ?>",
+        type: 'get',
+        data: {
+            key: DistrictID
+        },
+		async: false,
+        dataType: 'json',
+        success: function (data) {
+		   jQuery('#block').html(data);
+        },
+		error: function (data){
+			console.log(data);
+		}
+		
+    });
+}
+
+
+</script>
