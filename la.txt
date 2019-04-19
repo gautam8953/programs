@@ -636,3 +636,94 @@ class Cron extends CI_Controller {
     }
     
 }
+
+
+
+
+
+
+
+
+
+CREATE TABLE `gunak` (
+  `id` int(11) NOT NULL,
+  `cronDate` date NOT NULL,
+  `loginStatus` int(11) NOT NULL,
+  `totalRecord` int(11) DEFAULT NULL,
+  `fetchedRecord` int(11) DEFAULT NULL,
+  `updatedRecord` int(11) DEFAULT NULL,
+  `remarks` text,
+  `totalPages` int(11) DEFAULT NULL,
+  `fetchedPages` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gunak_assessment`
+--
+
+CREATE TABLE `gunak_assessment` (
+  `id` int(11) NOT NULL,
+  `cronDate` date NOT NULL,
+  `systemId` int(11) NOT NULL,
+  `fetchedData` text NOT NULL,
+  `saveStatus` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `gunak_pages`
+--
+
+CREATE TABLE `gunak_pages` (
+  `id` int(11) NOT NULL,
+  `cronDate` date NOT NULL,
+  `pageNo` int(11) NOT NULL,
+  `data` text NOT NULL,
+  `status` int(11) NOT NULL,
+  `fetchedData` text NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `gunak`
+--
+ALTER TABLE `gunak`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `gunak_assessment`
+--
+ALTER TABLE `gunak_assessment`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `gunak_pages`
+--
+ALTER TABLE `gunak_pages`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `gunak`
+--
+ALTER TABLE `gunak`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+--
+-- AUTO_INCREMENT for table `gunak_assessment`
+--
+ALTER TABLE `gunak_assessment`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+--
+-- AUTO_INCREMENT for table `gunak_pages`
+--
+ALTER TABLE `gunak_pages`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
