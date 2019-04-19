@@ -360,7 +360,6 @@ class Cron extends CI_Controller {
         exit;        
     }
     public function gunakassessment(){
-      /*$config['gunak'] = array('loginUrl'=>'https://uat.gunak.nhsrcindia.org:443/api/login','assessmentUrl'=>'https://uat.gunak.nhsrcindia.org:443/api/ext/assessmentSummary','assessmentDetailUrl'=>'https://uat.gunak.nhsrcindia.org:443/api/ext/assessment/','pullRequest'=>10,'userID'=>'laqshyaapi@example.com','password'=>'vTpocZNkqhXhPFCqUZTfzG3A');*/
 
       $gunakConfig=$this->config->item('gunak');
       $loginData=array(
@@ -372,8 +371,16 @@ class Cron extends CI_Controller {
           "cache-control: no-cache"
         );
       $loginData=$this->curlRequest('POST',$gunakConfig['loginUrl'],$loginData,$loginHeader,1);
+      $gunak=array(
+        'cronDate'=>date('Y-m-d'),
+        'loginStatus'=>@$loginData['responseCode'],
+        'totalRecord'=>0,
+        'fetchedRecord'=>0,
+        'updatedRecord'=>0
+      );
 
       if(isset($loginData['responseCode']) && $loginData['responseCode']==200){
+        $this->db->insert('gunak', $gunak)
         $getDataHeader=array(
           'Accept: application/json'
         );
@@ -385,6 +392,8 @@ class Cron extends CI_Controller {
           'size' => 1
         );
         $mainData=$this->curlRequest('GET',$gunakConfig['assessmentUrl'],$requestData,$getDataHeader,1);
+        $totalData=0;
+        $fetchedRecord=0;
         if(isset($mainData['responseCode']) && $mainData['responseCode']==200){
           $totalData=$mainData['data']['totalElements'];
           $pages=$totalData/$gunakConfig['pullRequest'];
@@ -394,37 +403,66 @@ class Cron extends CI_Controller {
             $assessmentDataReq['page']=$i;
             $assessmentData=$this->curlRequest('GET',$gunakConfig['assessmentUrl'],$assessmentDataReq,$getDataHeader,1);
             if(isset($assessmentData['responseCode']) && $assessmentData['responseCode']==200){
+              $fetchedRecord++;
               if(isset($assessmentData['data']['content']) && count($assessmentData['data']['content'])>0){
                 foreach ($assessmentData['data']['content'] as $key => $value) {
                   $curlUrl=$gunakConfig['assessmentDetailUrl'].'/'.$value['systemId'];
                   $assessmentDetails=$this->curlRequest('GET',$curlUrl,array(),$getDataHeader,1);
                   if(isset($assessmentDetails['responseCode']) && $assessmentDetails['responseCode']==200){
                     if(!empty($assessmentDetails['data'])){
-                      $save=$this->savegunakAssessment($assessmentDetails['data']);
+                      $saveStatus=$this->savegunakAssessment($assessmentDetails['data']);
+                      $fetchedData=serialize($assessmentDetails['data']);
                     } else {
                       // empty data get of system id
+                      $fetchedData='no data get';
                     }
                   } else {
                     // data not fetched, save systemId with faild response data
+                    $fetchedData='';
                   }
                   //echo "<pre>";print_r($assessmentDetails);echo "</pre>";
+                  $gunak_assessment=array(
+                    'cronDate'=>date('Y-m-d'),
+                    'systemId'=>$value['systemId'],
+                    'fetchedData'=>$fetchedData,
+                    'saveStatus'=>$saveStatus
+                  );
+                  $this->db->insert('gunak_assessment', $gunak_assessment);                  
                 }
               }
-              $assessmentDataReqStatus=0;
+              $assessmentDataReqStatus=1;
+              $fetchedData=serialize($assessmentData['data']['content']);
             } else {
               // insert error of page data not fetched, with configuration
-              $assessmentDataReqStatus=0;              
+              $assessmentDataReqStatus=0;
+              $fetchedData='';
             }
             // save $assessmentDataReq as serialized data with $assessmentDataReqStatus AND http status;
+            $gunak_pages=array(
+              'cronDate'=>date('Y-m-d'),
+              'status'=>$assessmentDataReqStatus,
+              'data'=>serialize($assessmentDataReq),
+              'pageNo'=>$i,
+              'fetchedData'=>$fetchedData
+            );
+            $this->db->insert('gunak_pages', $gunak_pages);
           }
           //echo "<pre>";print_r($mainData);echo "</pre>";
         } else {
           $msg='assessment - '.@$mainData['message'];
-          die($msg);          
+          $gunakData['remarks']=$msg;
+          //die($msg);          
         }
-        
+        $gunakData=array(
+          'totalRecord'=>$totalData,
+          'fetchedRecord'=>$fetchedRecord
+        );
+        $this->db->where('cronDate',date('Y-m-d'));
+        $this->db->update('gunak',$gunakData);        
       } else {
         $msg='login - '.@$loginData['message'];
+        $gunak['remarks']=$msg;
+        $this->db->insert('gunak', $gunak);
         die($msg);
       }      
     }
@@ -433,13 +471,7 @@ class Cron extends CI_Controller {
 
         echo "<pre>";print_r($assessmentData['checklists']);echo "</pre>";
         /*
-        URL: https://uat.gunak.nhsrcindia.org/app/index.html
-User: arvindk.jha@rvsolutions.in
-Password: CPio3HzEodcQouLwAwobbLGc
-email: laqshyaapi@example.com
-password: vTpocZNkqhXhPFCqUZTfzG3A
 
-        https://app.swaggerhub.com/apis-docs/gunak-nhsrc/gunak/1.0.0#/ 
         try {
           if($this->db->insert('answer', $answer)){
             $answer['AnswerID']=$this->db->insert_id();
