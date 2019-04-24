@@ -1276,3 +1276,13 @@ if(mysqli_num_rows($queryRes)>0){
 //print_r($data);
 echo json_encode($data);
 exit;
+
+
+
+24-4-2019 task : 
+officer exit date in posting  1
+avinash task of temp officer   4
+done- pmsma task for m-Health  (new data update left)  2
+Gunak Inregration of validation and gunak data show on portal  discussion 1.5
+PMSMA Facilites having blank nin-id
+laqshya website nearest facility total facility come from portal and update new static list of facility in laqshay portal
