@@ -11853,3 +11853,96 @@ if (isset ( $_GET ['confirmed'] ) && $_GET ['confirmed'] != '') {
 
 
 SELECT facilities.FacilityID,states.StateName,district.DistrictName,facilities.FacilityName,facilities.FacilityNumber FROM `facilities` INNER JOIN states on(facilities.StateID=states.StateID) INNER JOIN district on(facilities.DistrictID=district.DistrictID) WHERE (`FacilityNumber`='' OR `FacilityNumber` is null) AND facilities.StateID NOT in(6,12,4,17) order by facilities.StateID,facilities.DistrictID,facilities.FacilityName
+
+
+
+<?php 
+// https://nin.nhp.gov.in/api/facilities?api-key=AIkhSyD878mxnps32aCUQSOQXnxzc0PWVQsRkxq&state_name=gujarat&hfi_name=sharda
+error_reporting(E_ALL);
+$conn = new mysqli('localhost', 'root', '', 'lakshya_test');
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+$response=array('code'=>0);
+$url = 'https://nin.nhp.gov.in/api/facilities';
+
+
+echo $sqlNewUser="SELECT facilities.FacilityID,states.StateName,district.DistrictName,facilities.FacilityName,facilities.FacilityNumber 
+FROM `facilities` 
+INNER JOIN states on(facilities.StateID=states.StateID)
+INNER JOIN district on(facilities.DistrictID=district.DistrictID)
+WHERE (`FacilityNumber`='' OR `FacilityNumber` is null) AND states.StateName='Andaman and Nicobar' 
+order by facilities.StateID,facilities.DistrictID,facilities.FacilityName";
+/*$sqlNewUser="SELECT facilities.FacilityID,states.StateName,district.DistrictName,facilities.FacilityName,facilities.FacilityNumber
+    FROM cmofacilities 
+    INNER JOIN facilities ON cmofacilities.FacilityID=facilities.FacilityID
+    INNER JOIN states on(facilities.StateID=states.StateID AND states.IsActive=1)
+    INNER JOIN district on(facilities.DistrictID=district.DistrictID AND district.IsActive=1)
+    WHERE cmofacilities.IsActive=1 AND (facilities.FacilityNumber='' OR  facilities.FacilityNumber is null) AND states.StateName='ANDAMAN AND NICOBAR ISLANDS' 
+    order by facilities.StateID,facilities.DistrictID,facilities.FacilityName";*/
+
+$queryTot = $conn->query($sqlNewUser); 
+while($value = $queryTot->fetch_assoc()){
+  $fields = array(
+    'api-key' => urlencode('AIkhSyD878mxnps32aCUQSOQXnxzc0PWVQsRkxq'),
+    'state_name' => trim($value['StateName']),
+    'district_name' => trim($value['DistrictName']),
+    'hfi_name' => trim($value['FacilityName'])
+  );
+
+/*
+  //url-ify the data for the POST
+  $fields_string='';
+  foreach($fields as $key=>$value) { $fields_string .= $key.'='.$value.'&'; }
+  $fields_string=rtrim($fields_string, '&');
+
+  //open connection
+  $ch = curl_init();
+
+  //set the url
+  $curlUrl=$url.'?'.$fields_string;
+  curl_setopt($ch,CURLOPT_URL,$curlUrl);
+
+  $header = array(
+      'Accept: application/json'
+  );
+
+  // pass header variable in curl method
+  curl_setopt($ch, CURLOPT_HTTPHEADER, $header);
+  //curl_setopt($ch, CURLOPT_COOKIEJAR, 'cookies.txt');
+  //curl_setopt($ch, CURLOPT_COOKIEFILE, 'cookies.txt');
+  //curl_setopt($ch, CURLOPT_COOKIE, 'cookiename=JSESSIONID');
+
+  //set the no of post  
+  //curl_setopt($ch,CURLOPT_POST, count($fields));
+
+  //set the post data
+  //curl_setopt($ch,CURLOPT_POSTFIELDS, $fields_string);
+
+  //Set CURLOPT_RETURNTRANSFER so that the content is returned as a variable.
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+  //Set CURLOPT_FOLLOWLOCATION to true to follow redirects.
+  curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+
+  //execute post
+  $result = curl_exec($ch);
+  //echo $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+  $resultData=json_decode($result,true);
+  echo "<pre>"; print_r($fields);print_r($resultData); echo "</pre>";
+
+  //close connection
+  curl_close($ch);*/
+
+}
+
+
+
+
+
+
+
+
+
+
