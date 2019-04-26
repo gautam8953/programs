@@ -11850,3 +11850,6 @@ if (isset ( $_GET ['confirmed'] ) && $_GET ['confirmed'] != '') {
 
     </body>
 </html>
+
+
+SELECT facilities.FacilityID,states.StateName,district.DistrictName,facilities.FacilityName,facilities.FacilityNumber FROM `facilities` INNER JOIN states on(facilities.StateID=states.StateID) INNER JOIN district on(facilities.DistrictID=district.DistrictID) WHERE (`FacilityNumber`='' OR `FacilityNumber` is null) AND facilities.StateID NOT in(6,12,4,17) order by facilities.StateID,facilities.DistrictID,facilities.FacilityName
