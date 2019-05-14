@@ -1,0 +1,159 @@
+<?php
+error_reporting(E_ALL);
+// Create connection
+$conn = new mysqli('localhost', 'root', '', 'nhp_son');
+// Check connection
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+$insertQuery=array();
+
+// chart_div  Tour wise Delegates start
+		$sql="SELECT year(t.start_date) as year,count(distinct(t.tour_id)) as totaltours,count(d.delegate_id) as totaldelgates 
+FROM `tour` as t
+INNER JOIN delegate_details as d on(t.tour_id=d.tour_id)
+GROUP by year(t.start_date)";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		//$count = 0;
+		while($value = $queryTot->fetch_assoc()){
+            /*$tourCount[$count]['year'] = $value['year'];
+            $tourCount[$count]['totaltours'] = $value['totaltours'];
+            $tourCount[$count]['totaldelgates'] = $value['totaldelgates'];
+            $count++;*/
+
+			$insertQuery[]="insert into son-dashboard set charttype='chart-1',field-1='".$value['year']."',field-2='".$value['totaltours']."',field-3='".$value['totaldelgates']."' ";			
+		}
+		//$data['totaltouryearwise'] = $tourCount;		
+	} else {
+		//$data['totaltouryearwise'] = $tourCount;
+	}
+
+// chart_div  Tour wise Delegates end
+
+// columnchart_values  Count of Conferences start
+		$sql="SELECT YEAR(sui.`created_date`) as year,COUNT(sui.international_conference_id) as userCournt FROM `users` INNER JOIN `international_conferences` sui ON sui.international_conference_id = users.user_id  GROUP BY YEAR(sui.`created_date`)";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		$color = array('#7cb5ec', '#f7a35c', '#8f85e8', '#434348', '#90ed7d');
+		$count=0;
+		while($value = $queryTot->fetch_assoc()){
+			$insertQuery[]="insert into son-dashboard set charttype='chart-2',field-1='".$value['year']."',field-2='".$value['userCournt']."',field-3='".$color[($count++)%4]."' ";			
+		}
+	} else {
+	}
+
+// columnchart_values  Count of Conferences end
+
+// donutchart2  Status of MoU Signed start
+		$sql="SELECT mou_status,count(mou_status) as tcount FROM `mou` group by mou_status";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		while($value = $queryTot->fetch_assoc()){
+	           if($value['mou_status'] == 'under-process') {
+                 $value['mou_status'] = str_replace('-', ' ', $value['mou_status']);
+                 $value['mou_status'] = ucwords($value['mou_status']);
+               }
+               if($value['mou_status']=='Active') {
+                $value['mou_status']='Signed (Active)';
+  
+              }
+              if($value['mou_status']=='In-Active') {
+                $value['mou_status']='Signed (Dormant)';
+  
+              }
+			$insertQuery[]="insert into son-dashboard set charttype='chart-3',field-1='".$value['mou_status']."',field-2='".$value['tcount']."' ";			
+		}
+	} else {
+	}
+
+// donutchart2  Status of MoU Signed end
+ 
+// listing data  Budget Estimate of Current Year start
+		$sql="SELECT * FROM fund_head_master where 1";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		while($value = $queryTot->fetch_assoc()){
+			$insertQuery[]="insert into son-dashboard set charttype='chart-4',field-1='".$value['head_id']."',field-2='".date('Y')." ".$value['head_value']."' ";			
+		}
+		//$data['totaltouryearwise'] = $tourCount;		
+	} else {		
+	}
+
+// listing data  Budget Estimate of Current Year end
+
+// listing data  Statement of Need(SON) Applications  start
+		$sql="SELECT count(son.user_id) totalCount FROM `son_user_personal_information` son WHERE son.son_applicant_no_count =2 AND son.aply_type = '1'";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		while($value = $queryTot->fetch_assoc()){
+			$insertQuery[]="insert into son-dashboard set charttype='chart-5-1',field-1='".$value['totalCount']."' ";			
+		}	
+	} else {		
+	}
+
+		$sql="SELECT count(sap.son_id) AS TotalWirthStatu FROM `son_applicants_status` sap INNER JOIN `son_user_personal_information` son ON `sap`.`son_id` = `son`.`user_id` and `sap`.`son_application_no` = `son`.`son_application_no` where sap.curent_status = 6 AND sap.is_active=1 AND son.aply_type = '1'";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		while($value = $queryTot->fetch_assoc()){
+			$insertQuery[]="insert into son-dashboard set charttype='chart-5-2',field-1='".$value['TotalWirthStatu']."' ";			
+		}
+	} else {		
+	}
+
+		$sql="SELECT count(sap.son_id) AS TotalWirthStatu FROM `son_applicants_status` sap INNER JOIN `son_user_personal_information` son ON `sap`.`son_id` = `son`.`user_id` and `sap`.`son_application_no` = `son`.`son_application_no` where sap.curent_status = 8 AND sap.is_active=1 AND son.aply_type = '1'";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		while($value = $queryTot->fetch_assoc()){
+			$insertQuery[]="insert into son-dashboard set charttype='chart-5-3',field-1='".$value['TotalWirthStatu']."' ";			
+		}
+	} else {		
+	}
+
+// listing data  Statement of Need(SON) Applications end
+
+
+// listing data  International Conferences Applications  start
+		$sql="SELECT count(ic.international_conference_id) totalCount FROM `international_conferences` ic";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		while($value = $queryTot->fetch_assoc()){
+			$insertQuery[]="insert into son-dashboard set charttype='chart-6-1',field-1='".$value['totalCount']."' ";			
+		}	
+	} else {
+	}
+
+		$sql="SELECT count(iap.ic_conf_id) AS TotalWirthStatu FROM `ic_applicant_status` iap INNER JOIN `international_conferences` ic ON `iap`.`ic_conf_id` = `ic`.`international_conference_id` where  iap.current_status = 1 AND iap.is_active=1";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		while($value = $queryTot->fetch_assoc()){
+			$insertQuery[]="insert into son-dashboard set charttype='chart-6-2',field-1='".$value['TotalWirthStatu']."' ";			
+		}
+	} else {		
+	}
+
+		$sql="SELECT count(iap.ic_conf_id) AS TotalWirthStatu FROM `ic_applicant_status` iap INNER JOIN `international_conferences` ic ON `iap`.`ic_conf_id` = `ic`.`international_conference_id` where  iap.current_status = 2 AND iap.is_active=1";	
+	$queryTot = $conn->query($sql);
+	$tourCount=array();
+	if($queryTot->num_rows>0){
+		while($value = $queryTot->fetch_assoc()){
+			$insertQuery[]="insert into son-dashboard set charttype='chart-6-3',field-1='".$value['TotalWirthStatu']."' ";			
+		}
+	} else {		
+	}
+
+// listing data  International Conferences Applications end
+
+
+
+echo "<pre>"; print_r($insertQuery); echo "</pre>"; die;
+		
