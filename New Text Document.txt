@@ -1,0 +1,110 @@
+-- phpMyAdmin SQL Dump
+-- version 4.8.4
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1:3308
+-- Generation Time: May 24, 2019 at 07:09 PM
+-- Server version: 10.1.37-MariaDB
+-- PHP Version: 7.3.1
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+--
+-- Database: `lakshya`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `anexture`
+--
+
+CREATE TABLE `anexture` (
+  `anextureID` int(11) NOT NULL,
+  `submitDate` date NOT NULL,
+  `UserID` int(11) NOT NULL,
+  `ParentUserID` int(11) NOT NULL DEFAULT '0',
+  `checklist_1` varchar(100) DEFAULT NULL,
+  `checklist_2` varchar(100) DEFAULT NULL,
+  `checklist_3` varchar(100) DEFAULT NULL,
+  `checklist_4` varchar(100) DEFAULT NULL,
+  `checklist_5` varchar(100) DEFAULT NULL,
+  `checklist_6` varchar(100) DEFAULT NULL,
+  `checklist_7` varchar(100) DEFAULT NULL,
+  `checklist_8` varchar(100) DEFAULT NULL,
+  `checklist_9` varchar(100) DEFAULT NULL,
+  `checklist_10` varchar(100) DEFAULT NULL,
+  `checklist_11` varchar(100) DEFAULT NULL,
+  `checklist_12` varchar(100) DEFAULT NULL,
+  `checklist_13` varchar(100) DEFAULT NULL,
+  `checklist_14` varchar(100) DEFAULT NULL,
+  `checklist_15` varchar(100) DEFAULT NULL,
+  `checklist_16` varchar(100) DEFAULT NULL,
+  `checklist_17` varchar(100) DEFAULT NULL,
+  `checklist_18` varchar(100) DEFAULT NULL,
+  `checklist_19` varchar(100) DEFAULT NULL,
+  `checklist_20` varchar(100) DEFAULT NULL,
+  `IsActive` bit(1) NOT NULL DEFAULT b'1',
+  `isDraft` bit(1) NOT NULL DEFAULT b'0',
+  `CreatedOn` datetime NOT NULL,
+  `CreatedBy` int(11) NOT NULL,
+  `ModifiedOn` datetime DEFAULT NULL,
+  `ModifiedBy` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `anexture`
+--
+
+INSERT INTO `anexture` (`anextureID`, `submitDate`, `UserID`, `ParentUserID`, `checklist_1`, `checklist_2`, `checklist_3`, `checklist_4`, `checklist_5`, `checklist_6`, `checklist_7`, `checklist_8`, `checklist_9`, `checklist_10`, `checklist_11`, `checklist_12`, `checklist_13`, `checklist_14`, `checklist_15`, `checklist_16`, `checklist_17`, `checklist_18`, `checklist_19`, `checklist_20`, `IsActive`, `isDraft`, `CreatedOn`, `CreatedBy`, `ModifiedOn`, `ModifiedBy`) VALUES
+(1, '0000-00-00', 0, 0, '0', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, b'1', b'0', '0000-00-00 00:00:00', 0, NULL, NULL);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `certification_anexture`
+--
+
+CREATE TABLE `certification_anexture` (
+  `certificationAnextureID` int(11) NOT NULL,
+  `CertificationID` int(11) NOT NULL,
+  `submitdate` date NOT NULL,
+  `submitfile` varchar(100) DEFAULT NULL,
+  `monthseq` smallint(6) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `anexture`
+--
+ALTER TABLE `anexture`
+  ADD PRIMARY KEY (`anextureID`);
+
+--
+-- Indexes for table `certification_anexture`
+--
+ALTER TABLE `certification_anexture`
+  ADD PRIMARY KEY (`certificationAnextureID`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `anexture`
+--
+ALTER TABLE `anexture`
+  MODIFY `anextureID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT for table `certification_anexture`
+--
+ALTER TABLE `certification_anexture`
+  MODIFY `certificationAnextureID` int(11) NOT NULL AUTO_INCREMENT;
+COMMIT;
