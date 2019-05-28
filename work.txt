@@ -1,0 +1,14 @@
+6.  Extend Gap Analysis Report to see a particular checklist or facility indicators
+8.  Monthly reporting data report in from-to format and show data in sum/Avg of different facilities 
+
+
+
+7.  Baseline" form can be added 4 time as (Baseline-1,Baseline-2,Baseline-3,Baseline-4)
+9.  Portal Trending data show from anexture-3 form
+10. On ministry dashboard top 5 data show (state/district/facility)
+11. Need state and national certification data from dashboard with facility Type and status 
+12. Line list of all dashboard data ()
+
+
+cadre reposetry for security audit
+iip portal all skill data in a table as row for check data when data not saved
