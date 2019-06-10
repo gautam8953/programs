@@ -1,0 +1,16 @@
+<?php
+// htaccess url: http://localhost/program/hts/cron/1/5
+// normal url: http://localhost/program/hts/cron.php?a=1&b=5
+// file path: htdocs/program/hts/cron.php
+
+/*
+# htaccess code in same folder
+RewriteEngine on
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^cron/(.*)/(.*) cron.php?q1=$1&q2=$2
+*/
+
+echo "<pre>"; print_r($_REQUEST); echo "</pre>";
+phpinfo();
+		
