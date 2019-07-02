@@ -114,142 +114,130 @@
             // indicator-12: c46*100/c35
             // indicator-12: PretermANCSInFacilitiesSNCU*100/TotalPretermDeliveries
             // indicator-12: (Number of preterm cases where Antenatal Corticosteroids (ANCS) was administered in facilities)*100/(Total no. of Preterm Deliveries)
-            if(){
-
+            if($value->TotalPretermDeliveries>0){
+                $ind12=($value->PretermANCSInFacilitiesSNCU*100)/$value->TotalPretermDeliveries;
             } else {
-
+                $ind12=0;
             }
-            $subdata[] = ($value->PretermANCSInFacilitiesSNCU>0 && $value->TotalPretermDeliveries>0)?formatValue(($value->PretermANCSInFacilitiesSNCU * 100) / ($value->TotalPretermDeliveries)):0;
+            $subdata[] = $ind12;
 
             // indicator-13: correct
             // indicator-13: c20*100/c14
             // indicator-13: MaternalPIHEclampsia*100/TotalMaternalDeaths
             // indicator-13: (PIH/Eclampsia)*100/(Total number of maternal deaths)
-            if(){
-
+            if($value->TotalMaternalDeaths>0){
+                $ind13=($value->TotalMaternalDeaths*100)/$value->TotalMaternalDeaths;
             } else {
-
+                $ind13=0;
             }
-            $subdata[] = ($value->MaternalPIHEclampsia==0)?0:formatValue(($value->MaternalPIHEclampsia * 100) / ($value->TotalMaternalDeaths));
+            $subdata[] = $ind13;
 
             // indicator-14: correct
             // indicator-14: (c16+c17)*100/c14
             // indicator-14: (MaternalAPH+MaternalPPH)*100/TotalMaternalDeaths
             // indicator-14: (APH+PPH)*100/(Total number of maternal deaths)
-            if(){
-
+            if($value->TotalMaternalDeath>0){
+                $ind14=(($value->MaternalAPH + $value->MaternalPPH)*100)/$value->TotalMaternalDeaths;
             } else {
-
+                $ind14=0;
             }
-            $subdata[] = ($value->MaternalAPH + $value->MaternalPPH==0)?0:formatValue((($value->MaternalAPH + $value->MaternalPPH) * 100) / ($value->TotalMaternalDeaths));
+            $subdata[] = $ind14;
 
             // indicator-15: correct
             // indicator-15: c52
             // indicator-15: ReorganizedLR
             // indicator-15: Whether facility has reorganized labour room as per the guidelines?
-            if(){
-
+            if($value->ReorganizedLR==1){
+                $ind15='YES';
             } else {
-
+                $ind15='NO';
             }
-            $subdata[] = ($value->ReorganizedLR==1)?'YES':'NO';
+            $subdata[] = $ind15;
 
             // indicator-16: correct
             // indicator-16: c53
             // indicator-16: AdequateStaffLR
             // indicator-16: Whether facility has adequate staff at labour rooms as per defined norms
-            if(){
-
+            if($value->AdequateStaffLR==1){
+                $ind16='YES';
             } else {
-
+                $ind='NO';
             }
-            $subdata[] = ($value->AdequateStaffLR==1)?'YES':'NO';
+            $subdata[] = $ind16;
 
             // indicator-17: correct
             // indicator-17: c54*100/(c11+c12)
             // indicator-17: OxytocinCount*100/(TotalNormalVaginalDeliveries+TotalAssistedVaginalDeliveries)
             // indicator-17: (Number of deliveries conducted in facility where Oxytocin was administered within one minute of birth)*100/(Total Number of Normal Vaginal Deliveries)+(Total Number of Assisted Vaginal Deliveries)
-            if(){
-
+            if($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries>0){
+                $ind17=($value->OxytocinCount*100)/($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries);
             } else {
-
+                $ind17=0;
             }
-            $subdata[] = ($value->OxytocinCount==0)?0:formatValue(($value->OxytocinCount * 100) / ($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries));
+            $subdata[] = $ind17;
 
             // indicator-18: wrong get from form
             // indicator-18: C68
             // indicator-18: CurrentOSCEScore 
             // indicator-18: current osce score (remove) from form
-            if(){
-
-            } else {
-
-            }
-            $subdata[] = '';
+            $ind18='0'
+            $subdata[] = $ind18;
 
             // indicator-19: c58
             // indicator-19: ReferralCases
             // indicator-19: Number of Referral cases reviewed in the month 
-            if(){
-
-            } else {
-
-            }
-            $subdata[] = $value->ReferralCases;
+            $ind19=$value->ReferralCases;
+            $subdata[] = $ind19;
 
             // indicator-20: c55+c56+c57
             // indicator-20: MaternalDeathsReviewed+NeonatalDeaths+MaternalMissCases
             // indicator-20: (Number of maternal deaths were reviewed in last month) + (Number of neonatal deaths were reviewed in last month) + (Number of Maternal Near Miss Cases were reviewed in last month)
-            if(){
-
-            } else {
-
-            }
-            $subdata[] = $value->MaternalDeathsReviewed + $value->NeonatalDeaths + $value->MaternalMissCases;
+            $ind20=$value->MaternalDeathsReviewed + $value->NeonatalDeaths + $value->MaternalMissCases;
+            $subdata[] = $ind20;
 
             // indicator-21: correct
             // indicator-21: c60
             // indicator-21: StockOutsInOT
             // indicator-21: Whether there was any stock outs of drugs and consumables in maternity OT
-            if(){
-
+            if($value->StockOutsInOT==1){
+                $ind21='YES';
             } else {
-
+                $ind21='NO';
             }
-            $subdata[] = ($value->StockOutsInOT==1)?'YES':'NO';
+            $subdata[] = $ind21;
 
             // indicator-22: correct
             // indicator-22: (c25+c26)*100/(c11+c12+c13)
             // indicator-22: (TotalFreshStillBirths+TotalMaceratedStillBirths)*100/ (TotalNormalVaginalDeliveries+TotalAssistedVaginalDeliveries+TotalCSections)
             // indicator-22: (Total number of Fresh Still births)+(Total number of macerated still births)*100/(Total Number of Normal Vaginal Deliveries)+(Total Number of Assisted Vaginal Deliveries)+(Total Number of C-Sections)
-            if(){
-
+            if($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections>0){
+                $ind22=(($value->TotalFreshStillBirths + $value->TotalMaceratedStillBirths)*100)/($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections);
             } else {
-
+                $ind22=0;
             }
-            $subdata[] = ($value->TotalFreshStillBirths + $value->TotalMaceratedStillBirths==0)?0:formatValue((($value->TotalFreshStillBirths + $value->TotalMaceratedStillBirths) * 100) / ($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections));
+            $subdata[] = $ind22;
 
             // indicator-23: (c51)*100/(c11+c12+c13);
             // indicator-23: SatisfiedDelivered * 100 / (TotalNormalVaginalDeliveries+TotalAssistedVaginalDeliveries+TotalCSections);
             // indicator-23: (Number of beneficiaries delivered last month who were either satisfied or highly satisfied)*100/(Total Number of Normal Vaginal Deliveries)+(Total Number of Assisted Vaginal Deliveries)+(Total Number of C-Sections)
             // =TotalDeliveries(Total Number of Deliveries)
-            if(){
-
+            if($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections>0){
+                $ind23=($value->SatisfiedDelivered*100)/($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections);
             } else {
-
+                $ind23=0;
             }
-            $subdata[] = ($value->SatisfiedDelivered>0)?formatValue(($value->SatisfiedDelivered * 100) / ($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections)):0;
+            $subdata[] = $ind23;
 
             // indicator-24: correct
             // indicator-24: c62
             // indicator-24: MCHDHFunctional
-            if(){
-
+            if($value->MCHDHFunctional==1){
+                $ind24='YES';
             } else {
-
+                $ind24='NO';
             }
             // indicator-24: Whether MCH/DH has functional Obs ICU/Hybrid ICU/HDU
-            $subdata[] = ($value->MCHDHFunctional==1)?'YES':'NO';
+            $subdata[] = $ind24;
 
             // indicator-25: correct;
             // indicator-25: c43+c44;
