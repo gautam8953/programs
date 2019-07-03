@@ -1,0 +1,44 @@
+25-6-2019
+Done ges event sepc admin  download excel exhibitor and delegate data error 1.5
+Done ges event make userinfo form as per delegate and exhibiotr 1.5
+rcmc mater reprot data check and dd no not showing 0.5
+rcmc new and renew data import 3.0
+
+laqshya facility old data find done 0.5
+laqshay bug indicator reprot 2.0
+
+
+
+
+28-6-2019	laqshya	1	laqshya central dashboard work mysqldump issue		2.5	done
+	laqshya		laqshya central dashboard data update script in table			
+	iip	4	page creation script liver server issue			
+	Iip-portal-module		task given by client through himanshu			
+	sepc engine event		remove heading from after registration page			
+	sepc rcmc	5	master report excel renew data and filter issue			
+	sepc rcmc	2	data delete, iecode change 		3	done
+	sepc ges event		email templet change, given for approval			
+	laqshya		bugs			
+	laqshya	3	static data remove from dashbaord		2.5	Inprogress
+						
+1-7-2019	laqshya		bugs vinay		4.5	
+	laqshya		laqshya central dashboard data update script in table			
+	laqshya	no task added	static data remove from dashbaord		1	done
+	laqshya		meetings		0.5	done
+	iip		page creation script liver server issue		1.5	
+	Iip-portal-module		task given by client through himanshu			
+	Wesbsite-28		Math captcha 		0.5	done
+						
+						
+2-7-2019	laqshya	2	bugs vinay		5	
+	laqshya	3	laqshya central dashboard data update script in table			
+	Iip-intranet	1	page migration script		0.5	
+	Iip-portal-module	4	task given by client through himanshu			
+	cadre		security audit point		2	
+	laqshya		guest login search not working properly in assment index page			
+	laqshya		discussion		1	done
+						
+3-7-2019	laqshya	bugs	Y-axis show in monthly report			
+	laqshay		central dashboard call and discussion			
+	iip		task estimation discussion		0.5	
+	laqshya		discussion mom + other		1	
