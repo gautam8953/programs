@@ -1,0 +1,642 @@
+<?php 
+$basepath='http://localhost/programs/sync_master/sync_master_laqshya';
+$connection = mysqli_connect("localhost", "root", "", "lakshya");
+//$connection = mysqli_connect("10.189.10.114", "nhp", "Rvsolutions@123", "nhp_son");
+
+    // update data code started
+
+//mysqli_query($connection, 'TRUNCATE dashboard_data_laqshya');
+
+$insertQueries=array();
+
+// boxtop start
+    $sql="SELECT `um`.`UsermappingID` FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 WHERE `f`.`IsActive` = '1'"; 
+  $query = mysqli_query($connection, $sql);
+  $totalLaQshya=mysqli_num_rows($query);
+
+    $sql="SELECT `um`.`UsermappingID` FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `typedetail` `t` ON `f`.`FacilityTypeDetailID`=`t`.`TypeDetailID` AND `t`.`IsActive`=1 WHERE `f`.`IsActive` = '1' AND `t`.`TypeDetailID` = '485'"; 
+  $query = mysqli_query($connection, $sql);
+  $totalMedFacility=mysqli_num_rows($query);
+
+    $sql="SELECT `um`.`UsermappingID` FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `typedetail` `t` ON `f`.`FacilityTypeDetailID`=`t`.`TypeDetailID` AND `t`.`IsActive`=1 WHERE `f`.`IsActive` = '1' AND `t`.`TypeDetailID` = '442'"; 
+  $query = mysqli_query($connection, $sql);
+  $totalDisFacility=mysqli_num_rows($query);
+
+    $sql="SELECT `um`.`UsermappingID` FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `typedetail` `t` ON `f`.`FacilityTypeDetailID`=`t`.`TypeDetailID` AND `t`.`IsActive`=1 WHERE `f`.`IsActive` = '1' AND `t`.`TypeDetailID` = '455'"; 
+  $query = mysqli_query($connection, $sql);
+  $totalSubDivFacility=mysqli_num_rows($query);
+
+    $sql="SELECT `um`.`UsermappingID` FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `typedetail` `t` ON `f`.`FacilityTypeDetailID`=`t`.`TypeDetailID` AND `t`.`IsActive`=1 WHERE `f`.`IsActive` = '1' AND `t`.`TypeDetailID` = '441'"; 
+  $query = mysqli_query($connection, $sql);
+  $totalCHC=mysqli_num_rows($query);
+
+    $sql="SELECT `um`.`UsermappingID` FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `typedetail` `t` ON `f`.`FacilityTypeDetailID`=`t`.`TypeDetailID` AND `t`.`IsActive`=1 WHERE `f`.`IsActive` = '1' AND `t`.`TypeDetailID` = '451'"; 
+  $query = mysqli_query($connection, $sql);
+  $totalFRU=mysqli_num_rows($query);
+
+    $sql="SELECT `um`.`UsermappingID` FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `typedetail` `t` ON `f`.`FacilityTypeDetailID`=`t`.`TypeDetailID` AND `t`.`IsActive`=1 WHERE `f`.`IsActive` = '1' AND `t`.`TypeDetailID` NOT IN('441', '451', '442', '485', '455') AND `t`.`TypeMasterID` = '4'"; 
+  $query = mysqli_query($connection, $sql);
+  $totalOtherFacility=mysqli_num_rows($query);
+
+$insertQueries[]="insert into dashboard_data_laqshya set type_data='boxtop',field_1='".$totalLaQshya."',field_2='".$totalMedFacility."',field_3='".$totalDisFacility."',field_4='".$totalSubDivFacility."',field_5='".$totalCHC."',field_6='".$totalFRU."',field_7='".$totalOtherFacility."' ";
+// boxtop end
+
+
+
+// mapInd statrted
+$sql="SELECT `s`.`StateName` as `catName`, count(f.FacilityID) as facilities, `s`.`mapCode`, IFNULL(sum(aLR.SurveyStatus), 'NA') as LrBaseLine, IFNULL(sum(aOT.SurveyStatus), 'NA') as OtbaseLine, IFNULL(sum(cLR.IsActive), 'NA') as certifiedLR, IFNULL(sum(cOT.IsActive), 'NA') as certifiedOT, IFNULL(sum(cSLR.IsActive), 'NA') as stateCertifiedLR, IFNULL(sum(cSOT.IsActive), 'NA') as stateCertifiedOT 
+FROM `usermapping` `um` 
+INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 
+INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 
+LEFT JOIN `answer` `aLR` ON `um`.`UserID`=`aLR`.`UserID` AND `aLR`.`IsActive`=1 AND `aLR`.`SurveyStatus`=1 AND `aLR`.`Sequence`=11 AND `aLR`.`SurveyID`=1 
+LEFT JOIN `answer` `aOT` ON `um`.`UserID`=`aOT`.`UserID` AND `aOT`.`IsActive`=1 AND `aOT`.`SurveyStatus`=1 AND `aOT`.`Sequence`=11 AND `aOT`.`SurveyID`=2 
+LEFT JOIN `certification` `cLR` ON `um`.`UserID`=`cLR`.`userID` AND `cLR`.`certification_type`='lr' AND `cLR`.`level`=1 AND `cLR`.`status`=3 AND `cLR`.`IsCurrent`=1 AND `cLR`.`IsActive`=1 
+LEFT JOIN `certification` `cOT` ON `um`.`UserID`=`cOT`.`userID` AND `cOT`.`certification_type`='ot' AND `cOT`.`level`=1 AND `cOT`.`status`=3 AND `cOT`.`IsCurrent`=1 AND `cOT`.`IsActive`=1 
+LEFT JOIN `certification` `cSLR` ON `um`.`UserID`=`cSLR`.`userID` AND `cSLR`.`certification_type`='lr' AND `cSLR`.`level`=1 AND `cSLR`.`status`=3 AND `cSLR`.`IsCurrent`=1 AND `cSLR`.`IsActive`=1 
+LEFT JOIN `certification` `cSOT` ON `um`.`UserID`=`cSOT`.`userID` AND `cSOT`.`certification_type`='ot' AND `cSOT`.`level`=1 AND `cSOT`.`status`=3 AND `cSOT`.`IsCurrent`=1 AND `cSOT`.`IsActive`=1 
+GROUP BY `f`.`StateID`"; 
+$query = mysqli_query($connection, $sql);
+if(mysqli_num_rows($query)>0){
+  while($value = mysqli_fetch_assoc($query)){
+    $insertQueries[]="insert into dashboard_data_laqshya set type_data='mapInd',field_1='".$value['catName']."',field_2='".$value['facilities']."',field_3='".$value['mapCode']."',field_4='".$value['LrBaseLine']."',field_5='".$value['OtbaseLine']."',field_6='".$value['certifiedLR']."',field_7='".$value['certifiedOT']."',field_8='".$value['stateCertifiedLR']."',field_9='".$value['stateCertifiedOT']."' ";
+  }
+} else {
+}
+// mapInd ended
+
+
+// top 5  srtarted
+$sql="SELECT count(f.StateID) as Facilities, `s`.`StateName` FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 INNER JOIN `certification` `c` ON `um`.`UserID`=`c`.`userID` AND `c`.`status`=3 AND `c`.`IsActive`=1 AND `c`.`IsCurrent`=1 GROUP BY `f`.`StateID` ORDER BY count(f.StateID) DESC LIMIT 5";
+$query = mysqli_query($connection, $sql);
+if(mysqli_num_rows($query)>0){
+  $field=array('top5');
+  while($value = mysqli_fetch_assoc($query)){
+    $field[]=$value['Facilities'];
+  }
+} else {
+  $field=array('top5','','','','','');
+}
+$insertQueries[]="insert into dashboard_data_laqshya set type_data='top5',field_1='".@$field[1]."',field_2='".@$field[2]."',field_3='".@$field[3]."',field_4='".@$field[4]."',field_5='".@$field[5]."' ";
+// top 5 ennded
+
+// map box started
+$sql="SELECT 'all' as qryType,s.StateName,
+count(f.FacilityID) as Facilities, 
+IFNULL(sum(aLR.SurveyStatus), 'NA') as LrBaseLine, 
+IFNULL(sum(aOT.SurveyStatus), 'NA') as OtbaseLine,  
+IFNULL(sum(ApLR.IsActive), 'NA') as AppliedLR,
+IFNULL(sum(ApOT.IsActive), 'NA') as AppliedOT,
+IFNULL(sum(cLR.IsActive), 'NA') as CertifiedLR,
+IFNULL(sum(cOT.IsActive), 'NA') as CertifiedOT,  
+IFNULL(sum(StateApLR.IsActive), 'NA') as StateappliedLR,
+IFNULL(sum(StateApOT.IsActive), 'NA') as StateappliedOT,
+IFNULL(sum(StatecLR.IsActive), 'NA') as StatecertifiedLR,
+IFNULL(sum(StatecOT.IsActive), 'NA') as StatecertifiedOT 
+FROM `usermapping` `um` 
+INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1   
+INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1  
+LEFT JOIN `answer` `aLR` ON `um`.`UserID`=`aLR`.`UserID` AND `aLR`.`IsActive`=1 AND `aLR`.`SurveyStatus`=1 AND `aLR`.`Sequence`=11 AND `aLR`.`SurveyID`=1 
+LEFT JOIN `answer` `aOT` ON `um`.`UserID`=`aOT`.`UserID` AND `aOT`.`IsActive`=1 AND `aOT`.`SurveyStatus`=1 AND `aOT`.`Sequence`=11 AND `aOT`.`SurveyID`=2 
+LEFT JOIN `certification` `ApLR` ON `um`.`UserID`=`ApLR`.`userID` AND `ApLR`.`certification_type`='lr' AND `ApLR`.`level`=1 AND `ApLR`.`status`=1 AND `ApLR`.`IsCurrent`=1 AND `ApLR`.`IsActive`=1 
+LEFT JOIN `certification` `ApOT` ON `um`.`UserID`=`ApOT`.`userID` AND `ApOT`.`certification_type`='ot' AND `ApOT`.`level`=1 AND `ApOT`.`status`=1 AND `ApOT`.`IsCurrent`=1 AND `ApOT`.`IsActive`=1 
+LEFT JOIN `certification` `cLR` ON `um`.`UserID`=`cLR`.`userID` AND `cLR`.`certification_type`='lr' AND `cLR`.`level`=1 AND `cLR`.`status`=3 AND `cLR`.`IsCurrent`=1 AND `cLR`.`IsActive`=1  
+LEFT JOIN `certification` `cOT` ON `um`.`UserID`=`cOT`.`userID` AND `cOT`.`certification_type`='ot' AND `cOT`.`level`=1 AND `cOT`.`status`=3 AND `cOT`.`IsCurrent`=1 AND `cOT`.`IsActive`=1 
+LEFT JOIN `certification` `StateApLR` ON `um`.`UserID`=`StateApLR`.`userID` AND `StateApLR`.`certification_type`='lr' AND `StateApLR`.`level`=2 AND `StateApLR`.`status`=1 AND `StateApLR`.`IsCurrent`=1 AND `StateApLR`.`IsActive`=1 
+LEFT JOIN `certification` `StateApOT` ON `um`.`UserID`=`StateApOT`.`userID` AND `StateApOT`.`certification_type`='ot' AND `StateApOT`.`level`=2 AND `StateApOT`.`status`=1 AND `StateApOT`.`IsCurrent`=1 AND `StateApOT`.`IsActive`=1 
+LEFT JOIN `certification` `StatecLR` ON `um`.`UserID`=`StatecLR`.`userID` AND `StatecLR`.`certification_type`='lr' AND `StatecLR`.`level`=2 AND `StatecLR`.`status`=3 AND `StatecLR`.`IsCurrent`=1 AND `StatecLR`.`IsActive`=1 
+LEFT JOIN `certification` `StatecOT` ON `um`.`UserID`=`StatecOT`.`userID` AND `StatecOT`.`certification_type`='ot' AND `StatecOT`.`level`=2 AND `StatecOT`.`status`=3 AND `StatecOT`.`IsCurrent`=1 AND `StatecOT`.`IsActive`=1
+where 1";
+$query = mysqli_query($connection, $sql);
+if(mysqli_num_rows($query)>0){
+  $value = mysqli_fetch_assoc($query);
+    $insertQueries[]="insert into dashboard_data_laqshya set type_data='mapBox',field_1='".$value['Facilities']."',field_2='".$value['LrBaseLine']."',field_3='".$value['OtbaseLine']."',field_4='".$value['AppliedLR']."',field_5='".$value['AppliedOT']."',field_6='".$value['CertifiedLR']."',field_7='".$value['CertifiedOT']."',field_8='".$value['StatecertifiedLR']."',field_9='".$value['StatecertifiedOT']."' ";
+  
+} else {
+}
+// map box ended
+
+// map box asp started
+$sql="SELECT 'aspirational' as qryType,s.StateName,
+count(f.FacilityID) as Facilities, 
+IFNULL(sum(aLR.SurveyStatus), 'NA') as LrBaseLine, 
+IFNULL(sum(aOT.SurveyStatus), 'NA') as OtbaseLine,  
+IFNULL(sum(ApLR.IsActive), 'NA') as AppliedLR,
+IFNULL(sum(ApOT.IsActive), 'NA') as AppliedOT,
+IFNULL(sum(cLR.IsActive), 'NA') as CertifiedLR,
+IFNULL(sum(cOT.IsActive), 'NA') as CertifiedOT,  
+IFNULL(sum(StateApLR.IsActive), 'NA') as StateappliedLR,
+IFNULL(sum(StateApOT.IsActive), 'NA') as StateappliedOT,
+IFNULL(sum(StatecLR.IsActive), 'NA') as StatecertifiedLR,
+IFNULL(sum(StatecOT.IsActive), 'NA') as StatecertifiedOT 
+FROM `usermapping` `um` 
+INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1  
+INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1   
+INNER JOIN district d on `f`.`DistrictID`=d.DistrictID AND d.IsHighPriority=1
+LEFT JOIN `answer` `aLR` ON `um`.`UserID`=`aLR`.`UserID` AND `aLR`.`IsActive`=1 AND `aLR`.`SurveyStatus`=1 AND `aLR`.`Sequence`=11 AND `aLR`.`SurveyID`=1 
+LEFT JOIN `answer` `aOT` ON `um`.`UserID`=`aOT`.`UserID` AND `aOT`.`IsActive`=1 AND `aOT`.`SurveyStatus`=1 AND `aOT`.`Sequence`=11 AND `aOT`.`SurveyID`=2 
+LEFT JOIN `certification` `ApLR` ON `um`.`UserID`=`ApLR`.`userID` AND `ApLR`.`certification_type`='lr' AND `ApLR`.`level`=1 AND `ApLR`.`status`=1 AND `ApLR`.`IsCurrent`=1 AND `ApLR`.`IsActive`=1
+LEFT JOIN `certification` `ApOT` ON `um`.`UserID`=`ApOT`.`userID` AND `ApOT`.`certification_type`='ot' AND `ApOT`.`level`=1 AND `ApOT`.`status`=1 AND `ApOT`.`IsCurrent`=1 AND `ApOT`.`IsActive`=1 
+LEFT JOIN `certification` `cLR` ON `um`.`UserID`=`cLR`.`userID` AND `cLR`.`certification_type`='lr' AND `cLR`.`level`=1 AND `cLR`.`status`=3 AND `cLR`.`IsCurrent`=1 AND `cLR`.`IsActive`=1 
+LEFT JOIN `certification` `cOT` ON `um`.`UserID`=`cOT`.`userID` AND `cOT`.`certification_type`='ot' AND `cOT`.`level`=1 AND `cOT`.`status`=3 AND `cOT`.`IsCurrent`=1 AND `cOT`.`IsActive`=1
+LEFT JOIN `certification` `StateApLR` ON `um`.`UserID`=`StateApLR`.`userID` AND `StateApLR`.`certification_type`='lr' AND `StateApLR`.`level`=2 AND `StateApLR`.`status`=1 AND `StateApLR`.`IsCurrent`=1 AND `StateApLR`.`IsActive`=1
+LEFT JOIN `certification` `StateApOT` ON `um`.`UserID`=`StateApOT`.`userID` AND `StateApOT`.`certification_type`='ot' AND `StateApOT`.`level`=2 AND `StateApOT`.`status`=1 AND `StateApOT`.`IsCurrent`=1 AND `StateApOT`.`IsActive`=1 
+LEFT JOIN `certification` `StatecLR` ON `um`.`UserID`=`StatecLR`.`userID` AND `StatecLR`.`certification_type`='lr' AND `StatecLR`.`level`=2 AND `StatecLR`.`status`=3 AND `StatecLR`.`IsCurrent`=1 AND `StatecLR`.`IsActive`=1 
+LEFT JOIN `certification` `StatecOT` ON `um`.`UserID`=`StatecOT`.`userID` AND `StatecOT`.`certification_type`='ot' AND `StatecOT`.`level`=2 AND `StatecOT`.`status`=3 AND `StatecOT`.`IsCurrent`=1 AND `StatecOT`.`IsActive`=1 where 1";
+$query = mysqli_query($connection, $sql);
+if(mysqli_num_rows($query)>0){
+  $value = mysqli_fetch_assoc($query);
+    $insertQueries[]="insert into dashboard_data_laqshya set type_data='mapBox_asp',field_1='".$value['Facilities']."',field_2='".$value['LrBaseLine']."',field_3='".$value['OtbaseLine']."',field_4='".$value['AppliedLR']."',field_5='".$value['AppliedOT']."',field_6='".$value['CertifiedLR']."',field_7='".$value['CertifiedOT']."',field_8='".$value['StateappliedLR']."',field_9='".$value['StateappliedOT']."',field_10='".$value['StatecertifiedLR']."',field_11='".$value['StatecertifiedOT']."' ";
+  
+} else {
+}
+// map box asp ended
+
+// lasqhya status statred
+//stateOr
+$sql="SELECT count(f.FacilityID) as Facilities, IFNULL(sum(stateOr.IsActive), 0) as stateOrFac FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `certification` `stateOr` ON `um`.`UserID`=`stateOr`.`userID` AND `stateOr`.`certification_type`='so' AND `stateOr`.`level`=3 AND `stateOr`.`status`=3 AND `stateOr`.`IsCurrent`=1 AND `stateOr`.`IsActive`=1"; 
+$query = mysqli_query($connection, $sql);
+$data=mysqli_fetch_assoc($query);
+$stateOrFac=$data['stateOrFac'];
+
+//StateApLR
+$sql="SELECT count(f.FacilityID) as Facilities, IFNULL(sum(StateApLR.IsActive), 0) as StateappliedLR FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `certification` `StateApLR` ON `um`.`UserID`=`StateApLR`.`userID` AND `StateApLR`.`certification_type`='lr' AND `StateApLR`.`level`=2 AND `StateApLR`.`status`=1 AND `StateApLR`.`IsActive`=1 AND `StateApLR`.`IsCurrent`=1"; 
+$query = mysqli_query($connection, $sql);
+$data=mysqli_fetch_assoc($query);
+$StateappliedLR=$data['StateappliedLR'];
+//StateApOT
+$sql="SELECT count(f.FacilityID) as Facilities, IFNULL(sum(StateApOT.IsActive), 0) as StateappliedOT FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `certification` `StateApOT` ON `um`.`UserID`=`StateApOT`.`userID` AND `StateApOT`.`certification_type`='ot' AND `StateApOT`.`level`=2 AND `StateApOT`.`status`=1 AND `StateApOT`.`IsActive`=1 AND `StateApOT`.`IsCurrent`=1"; 
+$query = mysqli_query($connection, $sql);
+$data=mysqli_fetch_assoc($query);
+$StateappliedOT=$data['StateappliedOT'];
+//StatecLR
+$sql="SELECT count(f.FacilityID) as Facilities, IFNULL(sum(StatecLR.IsActive), 0) as StatecertifiedLR FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `certification` `StatecLR` ON `um`.`UserID`=`StatecLR`.`userID` AND `StatecLR`.`certification_type`='lr' AND `StatecLR`.`level`=2 AND `StatecLR`.`status`=3 AND `StatecLR`.`IsActive`=1 AND `StatecLR`.`IsCurrent`=1"; 
+$query = mysqli_query($connection, $sql);
+$data=mysqli_fetch_assoc($query);
+$StatecertifiedLR=$data['StatecertifiedLR'];
+//StatecOT
+$sql="SELECT count(f.FacilityID) as Facilities, IFNULL(sum(StatecOT.IsActive), 0) as StatecertifiedOT FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `certification` `StatecOT` ON `um`.`UserID`=`StatecOT`.`userID` AND `StatecOT`.`certification_type`='ot' AND `StatecOT`.`level`=2 AND `StatecOT`.`status`=3 AND `StatecOT`.`IsActive`=1 AND `StatecOT`.`IsCurrent`=1"; 
+$query = mysqli_query($connection, $sql);
+$data=mysqli_fetch_assoc($query);
+$StatecertifiedOT=$data['StatecertifiedOT'];
+//ApLR
+$sql="SELECT count(f.FacilityID) as Facilities, IFNULL(sum(ApLR.IsActive), 0) as AppliedLR FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `certification` `ApLR` ON `um`.`UserID`=`ApLR`.`userID` AND `ApLR`.`certification_type`='lr' AND `ApLR`.`level`=1 AND `ApLR`.`status`=1 AND `ApLR`.`IsActive`=1 AND `ApLR`.`IsCurrent`=1"; 
+$query = mysqli_query($connection, $sql);
+$data=mysqli_fetch_assoc($query);
+$AppliedLR=$data['AppliedLR'];
+//ApOT
+$sql="SELECT count(f.FacilityID) as Facilities, IFNULL(sum(ApOT.IsActive), 0) as AppliedOT FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `certification` `ApOT` ON `um`.`UserID`=`ApOT`.`userID` AND `ApOT`.`certification_type`='ot' AND `ApOT`.`level`=1 AND `ApOT`.`status`=1 AND `ApOT`.`IsActive`=1 AND `ApOT`.`IsCurrent`=1"; 
+$query = mysqli_query($connection, $sql);
+$data=mysqli_fetch_assoc($query);
+$AppliedOT=$data['AppliedOT'];
+//cLR
+$sql="SELECT count(f.FacilityID) as Facilities, IFNULL(sum(cLR.IsActive), 0) as CertifiedLR FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `certification` `cLR` ON `um`.`UserID`=`cLR`.`userID` AND `cLR`.`certification_type`='lr' AND `cLR`.`level`=1 AND `cLR`.`status`=3 AND `cLR`.`IsActive`=1 AND `cLR`.`IsCurrent`=1"; 
+$query = mysqli_query($connection, $sql);
+$data=mysqli_fetch_assoc($query);
+$CertifiedLR=$data['CertifiedLR'];
+// cOT
+$sql="SELECT count(f.FacilityID) as Facilities, IFNULL(sum(cOT.IsActive), 0) as CertifiedOT FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `certification` `cOT` ON `um`.`UserID`=`cOT`.`userID` AND `cOT`.`certification_type`='ot' AND `cOT`.`level`=1 AND `cOT`.`status`=3 AND `cOT`.`IsActive`=1 AND `cOT`.`IsCurrent`=1"; 
+$query = mysqli_query($connection, $sql);
+$data=mysqli_fetch_assoc($query);
+$CertifiedOT=$data['CertifiedOT'];
+
+$insertQueries[]="insert into dashboard_data_laqshya set type_data='laqshya_sts',field_1='".$data['Facilities']."',field_2='".$stateOrFac."',field_3='".$StateappliedLR."',field_4='".$StateappliedOT."',field_5='".$StatecertifiedLR."',field_6='".$StatecertifiedOT."',field_7='".$AppliedLR."',field_8='".$AppliedOT."',field_9='".$CertifiedLR."',field_10='".$CertifiedOT."'";
+
+
+// lasqhya status ended
+
+// indicator status started
+$totalFacility=$data['Facilities'];
+$sql="SELECT `s`.`StateName`, `d`.`DistrictName`, `f`.`FacilityName`, `f`.`FacilityNumber`, `f`.`stateID`, `f`.`districtId`, `um`.`UserID`, `m`.*, `ot`.`BaselineNQASChecklistLR`, `ot`.`BaselineNQASChecklistOT`, `ot`.`QualityTeamFacility`, `ot`.`QualityCircleLR`, `ot`.`QualityCircleOT`, `ot`.`OrientationAttended`, `ot`.`BaselineScoreOT`, `ot`.`BaselineScoreLR`
+FROM `monthly` as `m`
+INNER JOIN `onetime` as `ot` ON `ot`.`UserID`= `m`.`UserID`
+INNER JOIN `usermapping` as `um` ON `um`.`UserID`= `m`.`UserID`
+INNER JOIN `facilities` as `f` ON `f`.`FacilityID`= `um`.`FacilityID`
+INNER JOIN `states` as `s` ON `s`.`StateID`=`f`.`StateID`
+INNER JOIN `district` as `d` ON `d`.`DistrictID`=`f`.`DistrictID`
+WHERE `m`.`ReportMonth` = '".date('Y-m-01')."'
+ORDER BY `m`.`ReportMonth` DESC";
+$query = mysqli_query($connection, $sql);
+if(mysqli_num_rows($query)>0){
+  while($value = mysqli_fetch_assoc($query)){
+    //$subdata[] = date('F Y', strtotime($value->ReportMonth));
+    // indicator-1: C70+C73
+    if($value->BaselineNQASChecklistLR==1 || $value->BaselineNQASChecklistOT==1){
+        $ind1='YES';
+    } else {
+        $ind1='No';
+    }
+    $val_a = $ind1;
+
+    // indicator-2: C79+C80+C81
+    if($value->QualityTeamFacility==1 || $value->QualityCircleLR==1 || $value->QualityCircleOT==1){
+        $ind2='YES';
+    } else {
+        $ind2='No';
+    }
+    $val_b = $ind2;
+
+    // indicator-3: C82
+    if($value->OrientationAttended==1){
+        $ind3='YES';
+    } else {
+        $ind3='No';
+    }
+    $val_c = $ind3;
+
+    // indicator-4: c38*100/c11+c12
+    if(($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries)>0){
+        $ind4=($value->BirthCompanionNos*100)/($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries);
+    } else {
+        $ind4=0;
+    }
+    $val_d = formatValue($ind4);
+
+    // indicator-5: c39*100/c11+c12
+    if(($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries)>0){
+        $ind5=($value->SafeBirthChecklist*100)/($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries);
+    } else {
+        $ind5=0;
+    }
+    $val_e = formatValue($ind5);
+
+    // indicator-6: c40*100/c13
+    if($value->TotalCSections>0){
+        $ind6=($value->CSectionOTSafeChecklist*100)/$value->TotalCSections;
+    } else {
+        $ind6=0;
+    }
+    $val_f = formatValue($ind6);
+
+    // indicator-7: c41*100/c11+c12
+    if($value->TotalNormalVaginalDeliveries+$value->TotalAssistedVaginalDeliveries>0){
+        $ind7=($value->RealTimePartograph*100)/($value->TotalNormalVaginalDeliveries+$value->TotalAssistedVaginalDeliveries);
+    } else {
+        $ind7=0;
+    }
+    $val_g = formatValue($ind7);
+
+    // indicator-8: c42*100/(c13+c12+c11)
+    if($value->TotalAssistedVaginalDeliveries+$value->TotalNormalVaginalDeliveries+$value->TotalCSections>0){
+        $ind8=($value->BreastfedNewborns*100)/($value->TotalAssistedVaginalDeliveries + $value->TotalNormalVaginalDeliveries + $value->TotalCSections);
+    } else {
+        $ind8=0;
+    }
+    $val_h = formatValue($ind8);
+
+    // indicator-9: c47*100/(c11+c12+c13)
+    if(($value->TotalNormalVaginalDeliveries+$value->TotalAssistedVaginalDeliveries+$value->TotalCSections)>0){
+        $ind9=($value->NewbornsSNCUAsphyxia*100)/($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections);
+    } else {
+        $ind9=0;
+    }
+    $val_i = formatValue($ind9);
+
+    // indicator-10: c48*100/( c11+c12+c13 )  
+    if(($value->TotalNormalVaginalDeliveries+$value->TotalAssistedVaginalDeliveries+$value->TotalCSections)>0){
+        $ind10=($value->NewbornsSNCUSepsis*100)/($value->TotalNormalVaginalDeliveries+$value->TotalAssistedVaginalDeliveries+$value->TotalCSections);
+    } else {
+        $ind10=0;
+    }
+    $val_j = formatValue($ind10);
+
+    // indicator-11: c45*100/c13
+    if($value->TotalCSections>0){
+        $ind11=($value->CSectionsInfection*100)/$value->TotalCSections;
+    } else {
+        $ind11=0;
+    }
+    $val_k = formatValue($ind11);
+
+    // indicator-12: c46*100/c35
+    if($value->TotalPretermDeliveries>0){
+        $ind12=($value->PretermANCSInFacilitiesSNCU*100)/$value->TotalPretermDeliveries;
+    } else {
+        $ind12=0;
+    }
+    $val_l = formatValue($ind12);
+
+    // indicator-13: c20*100/c14
+    if($value->TotalMaternalDeaths>0){
+        $ind13=($value->MaternalPIHEclampsia*100)/$value->TotalMaternalDeaths;
+    } else {
+        $ind13=0;
+    }
+    $val_m = formatValue($ind13);
+
+    // indicator-14: (c16+c17)*100/c14
+    if($value->TotalMaternalDeaths>0){
+        $ind14=(($value->MaternalAPH + $value->MaternalPPH)*100)/$value->TotalMaternalDeaths;
+    } else {
+        $ind14=0;
+    }
+    $val_n = formatValue($ind14);
+
+    // indicator-15: c52
+    if($value->ReorganizedLR==1){
+        $ind15='YES';
+    } else {
+        $ind15='NO';
+    }
+    $val_o = $ind15;
+
+    // indicator-16: c53
+    if($value->AdequateStaffLR==1){
+        $ind16='YES';
+    } else {
+        $ind16='NO';
+    }
+    $val_p = $ind16;
+
+    // indicator-17: c54*100/(c11+c12)
+    if($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries>0){
+        $ind17=($value->OxytocinCount*100)/($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries);
+    } else {
+        $ind17=0;
+    }
+    $val_q = formatValue($ind17);
+
+    // indicator-18: C68
+    $ind18=$value->CurrentOSCEScore;
+    $val_r = formatValue($ind18);
+
+    // indicator-19: c58
+    $ind19=$value->ReferralCases;
+    $val_s = formatValue($ind19);
+
+    // indicator-20: 
+    $ind20=$value->MaternalDeathsReviewed + $value->NeonatalDeaths + $value->MaternalMissCases;
+    $val_t = formatValue($ind20);
+
+    // indicator-21: c60
+    if($value->StockOutsInOT==1){
+        $ind21='YES';
+    } else {
+        $ind21='NO';
+    }
+    $val_u = $ind21;
+
+    // indicator-22: (c25+c26)*100/(c11+c12+c13)
+    if($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections>0){
+        $ind22=(($value->TotalFreshStillBirths + $value->TotalMaceratedStillBirths)*100)/($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections);
+    } else {
+        $ind22=0;
+    }
+    $val_v = formatValue($ind22);
+
+    // indicator-23: 
+    if($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections>0){
+        $ind23=($value->SatisfiedDelivered*100)/($value->TotalNormalVaginalDeliveries + $value->TotalAssistedVaginalDeliveries + $value->TotalCSections);
+    } else {
+        $ind23=0;
+    }
+    $val_w = formatValue($ind23);
+
+    // indicator-24: c62
+    if($value->MCHDHFunctional==1){
+        $ind24='YES';
+    } else {
+        $ind24='NO';
+    }
+    $val_x = $ind24;
+
+    // indicator-25: c43+c44;
+    if($value->MCBSamplingLR==1 || $value->MCBSamplingOT==1){
+        $ind25='YES';
+    } else {
+        $ind25='NO';
+    }
+    $val_y = $ind25;
+
+    // indicator-26: (c66-c72)*100/c72;
+    if($value->BaselineScoreLR>0){
+        $ind26=(($value->CurrentLabourRoomQualityScore-$value->BaselineScoreLR)*100)/$value->BaselineScoreLR;
+    } else {
+        $ind26=0;
+    }
+    $val_z = formatValue($ind26);
+
+    // indicator-27: (c67-c75)*100/c75;
+    if($value->BaselineScoreOT>0){
+        $ind27=(($value->CurrentMaternityOTQualityScore-$value->BaselineScoreOT)*100)/$value->BaselineScoreOT;
+    } else {
+        $ind27=0;
+    }
+    $val_za=formatValue($ind27);
+
+    if($val_a=='YES'){  $val_a_text++; }
+    if($val_b=='YES'){  $val_b_text++; }
+    if($val_b=='YES'){  $val_c_text++; }
+    if($val_d>=90){  $val_d_text++; }
+    if($val_e>=90){  $val_e_text++; }
+    if($val_f>=90){  $val_f_text++; }
+    if($val_g>=90){  $val_g_text++; }
+    if($val_h>=80){  $val_h_text++; }
+    if($val_i>=80){  $val_i_text++; }
+    if($val_j>=80){  $val_j_text++; }
+    if($val_k<=5){  $val_j_text++; }
+    if($val_l>=80){  $val_l_text++; }
+    if($val_m==0){  $val_m_text++; }
+    if($val_n==0){  $val_n_text++; }
+    if($val_o=='YES'){  $val_o_text++; }
+    if($val_p=='YES'){  $val_p_text++; }
+    if($val_q>=100){  $val_q_text++; }
+    if($val_r>=80){  $val_r_text++; }
+    if($val_s>=0){  $val_s_text++; }
+    if($val_t>=0){  $val_t_text++; }
+    if($val_u=='YES'){  $val_u_text++; }
+    if($val_v>=0){  $val_v_text++; }
+    if($val_w>=0){  $val_w_text++; }
+    if($val_x=='YES'){  $val_x_text++; }
+    if($val_y=='YES'){  $val_y_text++; }
+    if($val_z>=0){  $val_z_text++; }
+    if($val_za>=0){  $val_za_text++; }
+    
+  }
+  $data_a=round((float)((($val_a_text/$totalFacility))*100), 2); if($data_a>75){  $data_a_class='success'; } else if($data_a>=50 && $data_a<=75){ $data_a_class='inprocess'; } else { $data_a_class='faild'; }
+
+  $data_b=round((float)((($val_b_text/$totalFacility))*100), 2); if($data_b>75){  $data_b_class='success'; } else if($data_b>=50 && $data_b<=75){ $data_b_class='inprocess'; } else { $data_b_class='faild'; }
+
+  $data_c=round((float)((($val_c_text/$totalFacility))*100), 2); if($data_c>75){  $data_c_class='success'; } else if($data_c>=50 && $data_c<=75){ $data_c_class='inprocess'; } else { $data_c_class='faild'; }
+
+  $data_d=round((float)((($val_d_text/$totalFacility))*100), 2); if($data_d>75){  $data_d_class='success'; } else if($data_d>=50 && $data_d<=75){ $data_d_class='inprocess'; } else { $data_d_class='faild'; }
+
+  $data_e=round((float)((($val_e_text/$totalFacility))*100), 2); if($data_e>75){  $data_e_class='success'; } else if($data_e>=50 && $data_e<=75){ $data_e_class='inprocess'; } else { $data_e_class='faild'; }
+
+  $data_f=round((float)((($val_f_text/$totalFacility))*100), 2); if($data_f>75){  $data_f_class='success'; } else if($data_f>=50 && $data_f<=75){ $data_f_class='inprocess'; } else { $data_f_class='faild'; }
+
+  $data_g=round((float)((($val_g_text/$totalFacility))*100), 2); if($data_g>75){  $data_g_class='success'; } else if($data_g>=50 && $data_g<=75){ $data_g_class='inprocess'; } else { $data_g_class='faild'; }
+
+  $data_h=round((float)((($val_h_text/$totalFacility))*100), 2); if($data_h>75){  $data_h_class='success'; } else if($data_h>=50 && $data_h<=75){ $data_h_class='inprocess'; } else { $data_h_class='faild'; }
+
+  $data_i=round((float)((($val_i_text/$totalFacility))*100), 2); if($data_i>75){  $data_i_class='success'; } else if($data_i>=50 && $data_i<=75){ $data_i_class='inprocess'; } else { $data_i_class='faild'; }
+
+  $data_j=round((float)((($val_j_text/$totalFacility))*100), 2); if($data_j>75){  $data_j_class='success'; } else if($data_j>=50 && $data_j<=75){ $data_j_class='inprocess'; } else { $data_j_class='faild'; }
+
+  $data_k=round((float)((($val_k_text/$totalFacility))*100), 2); if($data_k>75){  $data_k_class='success'; } else if($data_k>=50 && $data_k<=75){ $data_k_class='inprocess'; } else { $data_k_class='faild'; }
+
+  $data_l=round((float)((($val_l_text/$totalFacility))*100), 2); if($data_l>75){  $data_l_class='success'; } else if($data_l>=50 && $data_l<=75){ $data_l_class='inprocess'; } else { $data_l_class='faild'; }
+
+  $data_m=round((float)((($val_m_text/$totalFacility))*100), 2); if($data_m>75){  $data_m_class='success'; } else if($data_m>=50 && $data_m<=75){ $data_m_class='inprocess'; } else { $data_m_class='faild'; }
+
+  $data_n=round((float)((($val_n_text/$totalFacility))*100), 2); if($data_n>75){  $data_n_class='success'; } else if($data_n>=50 && $data_n<=75){ $data_n_class='inprocess'; } else { $data_n_class='faild'; }
+
+  $data_o=round((float)((($val_o_text/$totalFacility))*100), 2); if($data_o>75){  $data_o_class='success'; } else if($data_o>=50 && $data_o<=75){ $data_o_class='inprocess'; } else { $data_o_class='faild'; }
+
+  $data_p=round((float)((($val_p_text/$totalFacility))*100), 2); if($data_p>75){  $data_p_class='success'; } else if($data_p>=50 && $data_p<=75){ $data_p_class='inprocess'; } else { $data_p_class='faild'; }
+
+  $data_q=round((float)((($val_q_text/$totalFacility))*100), 2); if($data_q>75){  $data_q_class='success'; } else if($data_q>=50 && $data_q<=75){ $data_q_class='inprocess'; } else { $data_q_class='faild'; }
+
+  $data_r=round((float)((($val_r_text/$totalFacility))*100), 2); if($data_r>75){  $data_r_class='success'; } else if($data_r>=50 && $data_r<=75){ $data_r_class='inprocess'; } else { $data_r_class='faild'; }
+
+  $data_s=round((float)((($val_s_text/$totalFacility))*100), 2); if($data_s>75){  $data_s_class='success'; } else if($data_s>=50 && $data_s<=75){ $data_s_class='inprocess'; } else { $data_s_class='faild'; }
+
+  $data_t=round((float)((($val_t_text/$totalFacility))*100), 2); if($data_t>75){  $data_t_class='success'; } else if($data_t>=50 && $data_t<=75){ $data_t_class='inprocess'; } else { $data_t_class='faild'; }
+
+  $data_u=round((float)((($val_u_text/$totalFacility))*100), 2); if($data_u>75){  $data_u_class='success'; } else if($data_u>=50 && $data_u<=75){ $data_u_class='inprocess'; } else { $data_u_class='faild'; }
+
+  $data_v=round((float)((($val_v_text/$totalFacility))*100), 2); if($data_v>75){  $data_v_class='success'; } else if($data_v>=50 && $data_v<=75){ $data_v_class='inprocess'; } else { $data_v_class='faild'; }
+
+  $data_w=round((float)((($val_w_text/$totalFacility))*100), 2); if($data_w>75){  $data_w_class='success'; } else if($data_w>=50 && $data_w<=75){ $data_w_class='inprocess'; } else { $data_w_class='faild'; }
+
+  $data_x=round((float)((($val_x_text/$totalFacility))*100), 2); if($data_x>75){  $data_x_class='success'; } else if($data_x>=50 && $data_x<=75){ $data_x_class='inprocess'; } else { $data_x_class='faild'; }
+
+  $data_y=round((float)((($val_y_text/$totalFacility))*100), 2); if($data_y>75){  $data_y_class='success'; } else if($data_y>=50 && $data_y<=75){ $data_y_class='inprocess'; } else { $data_y_class='faild'; }
+
+  $data_z=round((float)((($val_z_text/$totalFacility))*100), 2); if($data_z>75){  $data_z_class='success'; } else if($data_z>=50 && $data_z<=75){ $data_z_class='inprocess'; } else { $data_z_class='faild'; }
+
+  $data_za=round((float)((($val_za_text/$totalFacility))*100), 2); if($data_za>75){  $data_za_class='success'; } else if($data_za>=50 && $data_za<=75){ $data_za_class='inprocess'; } else { $data_za_class='faild'; }
+
+  $insertQueries[]="insert into dashboard_data_laqshya set type_data='indicator_sts',
+  field_1='".$data_a."_".$data_a_class."',
+  field_2='".$data_b."_".$data_b_class."',
+  field_3='".$data_c."_".$data_c_class."',
+  field_4='".$data_d."_".$data_d_class."',
+  field_5='".$data_e."_".$data_e_class."',
+  field_6='".$data_f."_".$data_f_class."',
+  field_7='".$data_g."_".$data_g_class."',
+  field_8='".$data_h."_".$data_h_class."',
+  field_9='".$data_i."_".$data_i_class."',
+  field_10='".$data_j."_".$data_j_class."',
+  field_11='".$data_k."_".$data_k_class."',
+  field_12='".$data_l."_".$data_l_class."',
+  field_13='".$data_m."_".$data_m_class."',
+  field_14='".$data_n."_".$data_n_class."',
+  field_15='".$data_o."_".$data_o_class."',
+  field_16='".$data_p."_".$data_p_class."',
+  field_17='".$data_q."_".$data_q_class."',
+  field_18='".$data_r."_".$data_r_class."',
+  field_19='".$data_s."_".$data_s_class."',
+  field_20='".$data_t."_".$data_t_class."',
+  field_21='".$data_u."_".$data_u_class."',
+  field_22='".$data_v."_".$data_v_class."',
+  field_23='".$data_w."_".$data_w_class."',
+  field_24='".$data_x."_".$data_x_class."',
+  field_25='".$data_y."_".$data_y_class."',
+  field_26='".$data_z."_".$data_z_class."',
+  field_27='".$data_za."_".$data_za_class."',
+   ";
+
+} else {
+}
+// indicator status ended
+/*
+// chart anexture statrted
+SELECT DATE_FORMAT(ax.submitDate, "%b %Y") as ReportMonth, count(*) as cnt FROM `usermapping` `um` INNER JOIN `anexture` `ax` ON `um`.`UserID`=`ax`.`UserID` AND `ax`.`isDraft`=0 GROUP BY DATE_FORMAT(ax.submitDate, "%Y-%m-%d") ORDER BY `ax`.`submitDate` DESC LIMIT 6
+      $returnData=array(array('Category','Anexure'));
+      if($query -> num_rows()>0){
+        foreach ($query->result_array() as $key => $value) {
+          $returnData[]=array($value['ReportMonth'],(int)$value['cnt']);
+        }
+      }
+// chart anexture ended
+
+// piechartr mat death 
+      SELECT IFNULL(sum(m.MaternalAPH), 0) as MaternalAPH, IFNULL(sum(m.MaternalPPH), 0) as MaternalPPH, IFNULL(sum(m.MaternalSepsis), 0) as MaternalSepsis, IFNULL(sum(m.MaternalObstructedLabour), 0) as MaternalObstructedLabour, IFNULL(sum(m.MaternalPIHEclampsia), 0) as MaternalPIHEclampsia, IFNULL(sum(m.MaternalOthers), 0) as MaternalOthers, IFNULL(sum(m.MaternalPPH)+sum(m.MaternalSepsis)+sum(m.MaternalObstructedLabour)+sum(m.MaternalPIHEclampsia)+sum(m.MaternalOthers), 0) as TotalMaternalDeaths FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `monthly` `m` ON `um`.`UserID`=`m`.`UserID` AND `m`.`MonthlyStatus`=1 AND `m`.`ReportMonth`="2019-06-01"
+            $result=$query->row_array();
+      if(empty($result['TotalMaternalDeaths'])){
+        return array(
+              array('Category','Value'),
+              array('No Data',1)
+          );
+      } else {
+        return array(
+              array('Category','Value'),
+              array('APH',(int)$result['MaternalAPH']),
+              array('PPH',(int)$result['MaternalPPH']),
+              array('Sepsis',(int)$result['MaternalSepsis']),
+              array('Obstructed labour',(int)$result['MaternalObstructedLabour']),
+              array('Eclampsia',(int)$result['MaternalPIHEclampsia']),
+              array('Others',(int)$result['MaternalOthers'])
+          );        
+      }
+// piechartr mat death 
+
+// neonital detah
+      SELECT IFNULL(sum(m.NeonatalPrematurity), 0) as NeonatalPrematurity, IFNULL(sum(m.NeonatalSepsis), 0) as NeonatalSepsis, IFNULL(sum(m.NeonatalAsphyxia), 0) as NeonatalAsphyxia, IFNULL(sum(m.NeonatalOthers), 0) as NeonatalOthers, IFNULL(sum(m.NeonatalPrematurity)+sum(m.NeonatalSepsis)+sum(m.NeonatalAsphyxia)+sum(m.NeonatalOthers), 0) as total FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `monthly` `m` ON `um`.`UserID`=`m`.`UserID` AND `m`.`MonthlyStatus`=1 AND `m`.`ReportMonth`="2019-06-01"
+            $result=$query->row_array();
+      if(empty($result['total'])){
+        return array(
+              array('Category','Value'),
+              array('No Data',1)
+          );
+      } else {
+        return array(
+              array('Category','Value'),
+              array('Prematurity',(int)$result['NeonatalPrematurity']),
+              array('Sepsis',(int)$result['NeonatalSepsis']),
+              array('Asphyxia',(int)$result['NeonatalAsphyxia']),
+              array('Others',(int)$result['NeonatalOthers'])
+          );        
+      }
+// neonital detah
+
+
+// still birth
+SELECT IFNULL(sum(m.TotalFreshStillBirths), 0) as TotalFreshStillBirths, IFNULL(sum(m.TotalMaceratedStillBirths), 0) as TotalMaceratedStillBirths, IFNULL(sum(m.TotalMaceratedStillBirths)+sum(m.TotalFreshStillBirths), 0) as total FROM `usermapping` `um` INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1 INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1 LEFT JOIN `monthly` `m` ON `um`.`UserID`=`m`.`UserID` AND `m`.`MonthlyStatus`=1 AND `m`.`ReportMonth`="2019-06-01"
+      if(empty($result['total'])){
+        return array(
+              array('Category','Value'),
+              array('No Data',1)
+          );
+      } else {
+        return array(
+              array('Category','Value'),
+              array('Still Births',(int)$result['TotalFreshStillBirths']),
+              array('Macerated Still Births',(int)$result['TotalMaceratedStillBirths'])
+          );
+    }
+// still birth
+
+// deliveries
+SELECT IFNULL(sum(m.TotalNormalVaginalDeliveries), 0) as TotalNormalVaginalDeliveries, IFNULL(sum(m.TotalAssistedVaginalDeliveries), 0) as TotalAssistedVaginalDeliveries, IFNULL(sum(m.TotalCSections), 0) as TotalCSections, IFNULL(sum(m.TotalCSections)+sum(m.TotalNormalVaginalDeliveries)+sum(m.TotalAssistedVaginalDeliveries), 0) as total
+FROM `usermapping` `um`
+INNER JOIN `facilities` `f` ON `f`.`FacilityID`=`um`.`FacilityID` AND `um`.`FacilityID`>0 AND `f`.`IsActive`=1
+INNER JOIN `states` `s` ON `f`.`StateID`=`s`.`StateID` AND `f`.`IsActive`=1
+LEFT JOIN `monthly` `m` ON `um`.`UserID`=`m`.`UserID` AND `m`.`MonthlyStatus`=1 AND `m`.`ReportMonth`="2019-06-01
+      if(empty($result['total'])){
+        return array(
+              array('Category','Value'),
+              array('No Data',1)
+          );
+      } else {
+        return array(
+              array('Category','Value'),
+              array('Normal Vaginal Deliveries',(int)$result['TotalNormalVaginalDeliveries']),
+              array('Assisted Vaginal Deliveries',(int)$result['TotalAssistedVaginalDeliveries']),
+              array('C-Sections',(int)$result['TotalCSections'])
+          );
+    }
+// deliveries      
+
+*/
+
+foreach ($insertQueries as $key => $value) {
+    //mysqli_query($connection, $value);
+}
+
+
+echo "<pre>"; print_r($insertQueries); echo "</pre>";
+
+
+mysqli_close($connection);
+    // update data code ended
