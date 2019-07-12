@@ -1,0 +1,117 @@
+28-6-2019	laqshya	1	laqshya central dashboard work mysqldump issue		2.5	done	
+	laqshya		6105 laqshya central dashboard data update script in table				
+	iip	4	page creation script liver server issue				
+	Iip-portal-module		task given by client through himanshu				
+	sepc engine event		remove heading from after registration page				
+	sepc rcmc	5	master report excel renew data and filter issue				
+	sepc rcmc	2	data delete, iecode change 		3	done	
+	sepc ges event		email templet change, given for approval				
+	laqshya		bugs				
+	laqshya	3	6343 static data remove from dashbaord		2.5	Inprogress	
+							
+1-7-2019	laqshya		bugs vinay		4.5		logged
+	laqshya		6105  laqshya central dashboard data update script in table				
+	laqshya		6343 static data remove from dashbaord		1	done	
+	laqshya		meetings		0.5	done	
+	iip		page creation script liver server issue		1.5		
+	Iip-portal-module		task given by client through himanshu				
+	Wesbsite-28		Math captcha 		0.5	done	
+							
+							
+2-7-2019	laqshya	2	bugs vinay		5		
+	laqshya	3	6105 laqshya central dashboard data update script in table				
+	Iip-intranet	1	page migration script		0.5		
+	Iip-portal-module	4	task given by client through himanshu				
+	cadre		security audit point		2		
+	laqshya		guest login search not working properly in assment index page				
+	laqshya		discussion		1	done	
+							
+3-7-2019	laqshya		6092 nhsrc login		0.5		
+	laqshya	bugs	Y-axis show in monthly report		4		
+	laqshay		central dashboard call and discussion				
+	iip		task estimation discussion		0.5		
+	laqshya		discussion mom + other		1		
+							
+4-7-2019	iip		setup local iip-portal-module				
+	laqshya	done	6318 state dashboard data show				
+	laqshya	done	6329 pop for profile update in facility login				
+	laqshya	done	6208 audit form save and draft mode two times				
+	laqshya	done	6194 indicator report bugs				
+	laqshya	done	6193 csection bugs				
+	cadre	done	security audit point estimation		1		
+	laqshya	Inprogress	6359 ssl implemenation in portal and website	portal dev + live, pending: website			
+							
+	laqshya		6195 mail configure in laqshya feedback and portal		0.5		
+	laqshya		y axis data show				
+	laqshya		monthly report submit error				
+	laqshya		6105 laqshya central dashboard data update script in table				
+	cadre		irs officer not logged in error occured				
+							
+5-7-2019	iip		setup local iip-portal-module, and task				
+	laqshya	done	6359 ssl implemenation in portal and website				
+	laqshya		6195 mail configure in laqshya feedback and portal				
+	laqshya		y axis data show	hidden so error, display no error	2		
+	laqshya		monthly report submit error				
+	laqshya	2	6105 laqshya central dashboard data update script in table		4		
+	cadre	done, testing pending himanshu	irs officer not logged in error occured				
+	cadre 		security audit point				
+	laqshya	done	guest login search not working properly in assment index page				
+	laqshya	done	count correct of medical				
+							
+8-7-2019	iip		setup local iip-portal-module, and task				
+	laqshya		6195 mail configure in laqshya feedback and portal				
+	laqshya		monthly report submit error				
+	cadre 		security audit point				
+	laqshya		6510 profile page modal window for search nin number		4		
+	laqshya		profile page ot type add. 1-gen ot, 2. meterenty ot				
+	laqshya		add facility type search added facility list show				
+	laqshya	done	laqshya dashboard india map stand alone page create		1.5		
+	cadre	done	6513 option window add officer domicile state not showing		1		
+	sepc ges event		mail content change	mail content agian disapproved			
+	Sepc mipcon event	done	chin number limit change	no limit already set			
+	laqshya		6105 laqshya central dashboard data update script in table		1		
+							
+9-7-2019	iip		setup local iip-portal-module, and task				
+	laqshya		6195 mail configure in laqshya feedback and portal				
+	laqshya		monthly report submit error				
+	cadre 		security audit point				
+	laqshya		profile page ot type add. 1-gen ot, 2. meterenty ot				
+	laqshya		add facility type search added facility list show		1	done	
+	sepc ges event		mail content change	mail content agian disapproved	0.25	done	
+	Sepc mipcon event	done	chin number limit change	changed to 30	0.25	done	
+	laqshya		6510 profile page modal window for search nin number		1	done	
+	sepc mipcom event		6396, mipcon event change, data show hide as per select of company type	multiple upload pending	1.5	inprogress	
+	nabl		6511 Under NABl Website on adding Forced Withdrawal Accreditation discipline is not displaying in dropdown list.		2	done	
+	cadre	done	optio window add officer domicile state not showing		3		
+							
+10-7-2019	iip		setup local iip-portal-module, and task				
+	cadre 		security audit point				
+	laqshya		6195 mail configure in laqshya feedback and portal				
+	laqshya		monthly report submit error				
+	laqshya		6493 profile page ot type add. 1-gen ot, 2. meterenty ot		2.5	w	
+	sepc mipcom event		6396, mipcon event change, data show hide as per select of company type	multiple upload pending	3.5	done	no estimation
+	meeting		 		0.25	w	
+	sepc rcmc live		6585 Go Live Master report changes and mandatory field of Mob no. in registration Form		1	w, no task added	
+	sepc mipcom event		6561 add type of company in excel and view		1		
+							
+11-7-2019	iip		setup local iip-portal-module, and task		3	w	no task
+	cadre 		security audit point				
+	laqshya		6195 mail configure in laqshya feedback and portal				
+	laqshya		monthly report submit error				
+	nabl		lab not visible	expired and certificate not added by api new 	2	w	no task
+	sepc mipcom event		6561 add type of company in excel and view			w	
+	sepc mipcom event		6396, change, gst no show in pvt ltd			w	
+	laqshya		nin serach not working on demo	issue from nin server	0.5	w	0.5
+	sepc rcmc		menu add and popup text add		2	w	
+	sepc rcmc		mobile no mendetory	sandhya will tell later			
+	meeting				0.25		
+							
+12-7-2019	iip		setup local iip-portal-module, and task				
+	cadre 		security audit point				
+	laqshya		6195 mail configure in laqshya feedback and portal				
+	laqshya		monthly report submit error				
+	meeting 	0.25					
+	sepc rcmc		finanical year remove				
+	sepc rcmc		data delete				
+	sepc rcmc		menu and popup live				
+	sepc mipcom event			s in both partner and propriter, mendetory gst and pan nos			
