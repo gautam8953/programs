@@ -106,12 +106,23 @@
 	sepc rcmc		mobile no mendetory	sandhya will tell later			
 	meeting				0.25		
 							
-12-7-2019	iip		setup local iip-portal-module, and task				
+12-7-2019	iip		setup local iip-portal-module, and task		4		
 	cadre 		security audit point				
 	laqshya		6195 mail configure in laqshya feedback and portal				
 	laqshya		monthly report submit error				
 	meeting 	0.25					
-	sepc rcmc		finanical year remove				
-	sepc rcmc		data delete				
-	sepc rcmc		menu and popup live				
-	sepc mipcom event			s in both partner and propriter, mendetory gst and pan nos			
+	 		finanical year change	2 member			
+	sepc rcmc		data delete	3 member			
+	sepc rcmc		mobile no mendetory				
+	sepc rcmc		6598 menu and popup live		1.5		
+	sepc mipcom event		6597	s in both partner and propriter, mendetory gst and pan nos	1		
+							
+15-7-2019	iip		Iip-portal-module changes		3		
+	cadre 		security audit point				
+	laqshya		6195 mail configure in laqshya feedback and portal				
+	laqshya		monthly report submit error				
+	sepc rcmc		text changes in new nad renew financial year details		1		
+	sepc rcmc		data delete	10 member renew data	1		
+	nabl		add certificate kunal issue fix	server issue, server not working	1	w	
+	sepc mipcom event		live all show hide chnages made to live				
+	bench		internet not working, demo server issue		2		
