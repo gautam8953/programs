@@ -1,0 +1,2259 @@
+<?php
+ini_set('memory_limit', '-1');
+
+class PostingDAO
+{
+    public function insertintotable($officerid)
+    {
+        if(isset($_SESSION['officerVO']))
+        {
+            $tempOfficerVO = unserialize($_SESSION['officerVO']);
+            $postingList = $tempOfficerVO->getPostingList();
+            //print_r($postingList);
+
+            for($i=0;$i<count($postingList);$i++)
+            {
+                $tempPostingVO = $postingList[$i];
+                $pid=$tempPostingVO->getId();
+                $endDate=$tempPostingVO->getToDate();
+                $startDate=$tempPostingVO->getFromDate();
+                $postid = $tempPostingVO->getPostid();
+                $remark=$tempPostingVO->getRemark();
+                $duration = $tempPostingVO->getDuration();
+                $description = $tempPostingVO->getOtherpostdescription();
+                if($description=='')
+                {
+                    $description = $tempPostingVO->getDescription();
+                }
+                $othernumber = $tempPostingVO->getOthernumber();
+                $otheraddress = $tempPostingVO->getOtheraddress();
+                $posttypeid = $tempPostingVO->getPostingType();
+                $address = $tempPostingVO->getAddress();
+                $extension = $tempPostingVO->getExtensionNo();
+                $fax = $tempPostingVO->getFax();
+                $station = $tempPostingVO->getCityid();
+                $additional = $tempPostingVO->getAdditional();
+                $modifieddate = $tempPostingVO->getModifiedOn();
+                $createddate = $tempPostingVO->getCreatedOn();
+                $createby = $tempPostingVO->getCreatedBy();
+                $gradeid = $tempPostingVO->getGradeid();
+                $tempPostsDAO = new PostsDAO();
+                if($pid=='')
+                {
+                    if($_POST['posttypeid']==2)
+                    {
+                        $tempPostVO = $tempPostsDAO->getPostDetailsByCode($_POST['postcode']);
+                        $description = $_POST['description'];
+                        if($tempPostVO->getCity()>0)
+                        {
+                            $station = $tempPostVO->getCity();
+                        }
+                        else
+                        {
+                            $station = $_POST['city'];
+                        }
+                        if($description=='')
+                        {
+                            $description = $tempPostVO->getDescription();
+                        }
+                    }
+                    else
+                    {
+                        $station = $_POST['city'];
+                        $description = $_POST['description'];
+                    }
+					// this is the part add by abhishek for check of additional charge exist in the table for the postid and delete it.
+					 $ConQuery="select count(id) from postings where islastposting=2 and postid='$postid'";
+					 $ConRes= mysql_query($ConQuery);
+
+					 if(mysql_num_rows($ConRes)>0)
+					 {
+					 //	alert ("do or die in inserrt"+$postid);
+					 	$delQuery="delete from postings where islastposting=2 and postid='$postid'";
+						mysql_query($delQuery);
+					 }
+					///
+
+                    $insertquery="INSERT into postings(officerid,postid,station,toDate,fromDate,remark,createdBy,createdOn,modifiedBy,isActive,duration,description,postingType,extensionNo,address,fax,additional,gradeid)";
+                    $insertquery = $insertquery." values('$officerid','$postid','$station','$endDate','$startDate','$remark','$_SESSION[userId]',CURRENT_TIMESTAMP,'$_SESSION[userId]','1','$duration','$description','$posttypeid','$extension','$address','$fax','$additional','$gradeid')";
+                    mysql_query($insertquery);
+                    $lastid = mysql_insert_id();
+                    $tempPostingVO->setId($lastid);
+                    $postingList[$i]=$tempPostingVO;
+                }
+                else
+                {
+                    if($_POST['posttypeid']==2)
+                    {
+                        $tempPostVO = $tempPostsDAO->getPostDetailsByCode($_POST['postcode']);
+                        $description = $_POST['description'];
+                        if($tempPostVO->getCity()>0)
+                        {
+                            $station = $tempPostVO->getCity();
+                        }
+                        else
+                        {
+                            $station = $_POST['city'];
+                        }
+                        if($description=='')
+                        {
+                            $description = $tempPostVO->getDescription();
+                        }
+                    }
+                    else
+                    {
+                        $station = $_POST['city'];
+                        $description = $_POST['description'];
+                    }
+					// this is the part add by abhishek for check of additional charge exist in the table for the postid and delete it.
+					 $ConQuery="select count(id) from postings where islastposting=2 and postid='$postid'";
+					 $ConRes= mysql_query($ConQuery);
+
+					 if(mysql_num_rows($ConRes)>0)
+					 {
+					 	//alert ("do or die in inserrt pid not blank"+$postid);
+						$delQuery="delete from postings where islastposting=2 and postid='$postid'";
+						mysql_query($delQuery);
+					 }
+					///
+                    $insertquery="INSERT into postings(id,officerid,postid,station,toDate,fromDate,remark,createdBy,createdOn,isActive,duration,description,postingType,extensionNo,address,fax,additional,gradeid,modifiedOn,modifiedBy)";
+                    $insertquery = $insertquery." values('$pid','$officerid','$postid','$station','$endDate','$startDate','$remark','$createby','$createddate','1','$duration','$description','$posttypeid','$extension','$address','$fax','$additional','$gradeid','$modifieddate','$_SESSION[userId]')";
+                    mysql_query($insertquery);
+                }
+
+            }
+            $postingList = $tempOfficerVO->getPostingList();
+            //print_r($postingList);
+            $tempOfficerVO->setPostingList($postingList);
+        }
+    }
+
+    public function insertintopostings($officerid)
+    {
+        $tempPostsDAO = new PostsDAO();
+        $tempPostingDAO = new PostingDAO();
+        if($_POST['posttypeid']==2)
+        {
+            $tempPostVO = $tempPostsDAO->getPostDetailsByCode($_POST['postcode']);
+            $description = $_POST['description'];
+            if($tempPostVO->getCity()>0)
+            {
+                $station = $tempPostVO->getCity();
+            }
+            else
+            {
+                $station = $_POST['city'];
+            }
+            if($description=='')
+            {
+                $description = $tempPostVO->getDescription();
+            }
+        }
+        else
+        {
+            $tempPostVO = $tempPostsDAO->getPostDetailsByCode($_POST['postcode']);
+            $station = $_POST['city'];
+            $description = $tempPostVO->getDescription();
+        }
+        $endDate=getSQLDate($_POST['enddate']);
+        $startDate=getSQLDate($_POST['startdate']);
+        $todaydate = date("Y-m-d H:i:s");
+		$remark = addslashes($_POST[remark]);
+		$address = addslashes($_POST[address]);
+
+		if($_POST[additional] != "Yes")
+        {
+	        $insertquery="INSERT into postings(officerid,postid,station,toDate,fromDate,remark,createdBy,createdOn,modifiedBy,isActive,duration,description,postingType,extensionNo,address,fax,additional,gradeid)";
+	        $insertquery = $insertquery." values('$officerid','$_POST[postcode]','$station','$endDate','$startDate','$remark','$_SESSION[userId]',CURRENT_TIMESTAMP,'$_SESSION[userId]','1','$_POST[duration]','$description','$_POST[posttypeid]','$_POST[extension]','$address','$_POST[fax]','$_POST[additional]','$_POST[grade]')";
+        }
+        else
+        {
+        	/*
+        	 * Condition added by pulkit to handle Additional Charge as on 07th-Dec-09.
+        	 * a new row is inserted vid islastposting =2 and from date and todate as '0000-00-00'
+        	 */
+
+
+	        $insertquery="INSERT into postings(officerid,postid,station,toDate,fromDate,remark,createdBy,createdOn,isActive,duration,description,postingType,extensionNo,address,fax,additional,gradeid,islastposting)";
+	        $insertquery = $insertquery." values('$officerid','$_POST[postcode]','$station','0000-00-00','0000-00-00','$remark','$_SESSION[userId]',CURRENT_TIMESTAMP,'1','$_POST[duration]','$description','$_POST[posttypeid]','$_POST[extension]','$address','$_POST[fax]','$_POST[additional]','$_POST[grade]','2')";
+
+        }
+
+		// this is the part add by abhishek for check of additional charge exist in the table for the postid and delete it.
+					 $ConQuery="select count(id) from postings where islastposting=2 and postid='$_POST[postcode]'";
+					 $ConRes= mysql_query($ConQuery);
+					 if(mysql_num_rows($ConRes)>0)
+					 {
+					 		$delQuery="delete from postings where islastposting=2 and postid='$_POST[postcode]'";
+						mysql_query($delQuery);
+					 }
+
+					///
+
+		mysql_query($insertquery);
+        $lastid = mysql_insert_id();
+
+        /*
+         * Comminted by Pulkit as not used anywhere
+         * as on 29-Oct-2009
+
+        $fetchquery = "select * from postings where id='$id'";
+
+        $fetchresult = mysql_query($fetchquery);
+        if(mysql_num_rows($fetchresult)>0)
+        {
+            $fetchrow = mysql_fetch_array($fetchresult);
+        }
+        *Changes ends here---------------
+		*/
+        $datequery = "SELECT max(fromDate) from postings where officerid='$officerid'";
+        $dateresult = mysql_query($datequery);
+        if(mysql_num_rows($dateresult)>0)
+        {
+            $daterow = mysql_fetch_array($dateresult);
+            $postingList=$tempPostingDAO->getPostingListForOfficer($officerid);
+            if(count($postingList)>0)
+            {
+                for($k=0;$k<count($postingList);$k++)
+                {
+                    //Get the vo
+                    $tempPosting1VO = $postingList[$k];
+                /*
+                 * Following lines are Comminted by pulkit to handel Two or more rows for FromDate or '0000-00-00' in To Date
+                 * as on 29th-Oct-2009
+                 */
+/* Commint starts here
+                    $tempPosting1VO->setPostParams();
+                    $date1=trim($tempPosting1VO->getFromDate());//$dob1='dd/mm/yyyy' format
+                    list($y, $m, $d) = explode('-', $date1);
+                    $mk1=mktime(0, 0, 0, $m, $d, $y);
+                    $date_disp1=strftime('%Y-%m-%d',$mk1);
+
+                    $date2=trim($daterow[0]);//$dob1='dd/mm/yyyy' format
+                    list($yy, $mm, $dd) = explode('-', $date2);
+                    $mk2=mktime(0, 0, 0, $mm, $dd, $yy);
+                    $date_disp2=strftime('%Y-%m-%d',$mk2);
+
+                    if($date_disp1==$date_disp2)
+                    {
+                        $nid = $tempPosting1VO->getId();
+                        $updatequery="update postings set isLastPosting='1' where id='$nid'";
+                        mysql_query($updatequery);
+                    }
+                    else
+                    {
+                        $nid = $tempPosting1VO->getId();
+                        $updatequery="update postings set isLastPosting='0' where id='$nid'";
+                        mysql_query($updatequery);
+                    }
+Commint Ends Here                    */
+                	//Changes by pulkit for same continue---
+                	//
+                		$nid = $tempPosting1VO->getId();
+
+
+
+
+                        $updatequery="update postings set isLastPosting='0' where id='$nid' and isLastPosting != '2'";//Condition (isLastPosting != '2') added by pulkit to handle Additional Charge As on 07th-Dec-09
+                        mysql_query($updatequery);
+
+                }
+
+
+                 		$updatequery="CALL UpdateIsLastPosting('$officerid')";
+        				mysql_query($updatequery);
+                     //Changes ends here---
+            }
+        }
+    }
+	
+	/* function added on 29-1-2018 for update officer rank */
+	public function updateofficerrank($officerid)
+	{
+		
+		/////newly added to upgrade rank 
+		$updaterankgrade = "update officers set rankid='$_POST[rank]', gradeid = '$_POST[grade]', modifiedBy= $_SESSION[userId] where id = '$officerid'";
+		//echo $updaterankgrade; 
+		mysql_query($updaterankgrade);
+		/////////////////////end //////
+	}
+	//--End
+
+    /**
+     * This function will add new spouse vo to session
+     * @param <type> $row
+     * @return <type>
+     */
+    public function populatevofrompostarray($row='')
+    {
+        $tempPostingVOList = array();
+        $tempOfficerVO = unserialize($_SESSION['officerVO']);
+        $tempPostingVOList =$tempOfficerVO->getPostingList();
+
+        if($row>count($tempPostingVOList)-1)
+        {
+            $tempPostingVO = new PostingVO();
+        }
+        else
+        {
+            $tempPostingVO=$tempPostingVOList[$row];
+        }
+        if($_POST['id']!='')
+        {
+            $tempPostingVO->setId($_POST['id']);
+        }
+        $endDate=getSQLDate($_POST['enddate']);
+        $startDate=getSQLDate($_POST['startdate']);
+        $todaydate = date("Y-m-d H:i:s");
+        $tempPostingVO->setPostid($_POST['postcode']);
+        $tempPostingVO->setToDate($endDate);
+        $tempPostingVO->setFromDate($startDate);
+        $tempPostingVO->setRemark($_POST['remark']);
+        $tempPostingVO->setCityid($_POST['city']);
+        $tempPostingVO->setGradeid($_POST['grade']);
+        $tempPostingVO->setDuration($_POST['duration']);
+        $tempPostingVO->setOtherpostdescription($_POST['description']);
+        $tempPostingVO->setOthernumber($_POST['cnumber']);
+        $tempPostingVO->setOtheraddress($_POST['caddress']);
+        $tempPostingVO->setPostingType($_POST['posttypeid']);
+        $tempPostingVO->setExtensionNo($_POST['extension']);
+        $tempPostingVO->setAddress($_POST['address']);
+        $tempPostingVO->setFax($_POST['fax']);
+        $tempPostingVO->setAdditional($_POST['additional']);
+        $tempPostingVO->setCnt($row);
+        $tempPostingVO->setModifiedOn($todaydate);
+
+        $tempPostingVOList[$row]=$tempPostingVO;
+
+        //Set it in vo
+        $tempOfficerVO->setPostingList($tempPostingVOList);
+
+        //Set it in session
+        $_SESSION['officerVO']= serialize($tempOfficerVO);
+
+        return $tempOfficerVO;
+    }
+
+    public function updatetable($id) {
+        $endDate=getSQLDate($_POST[enddate]);
+        $startDate=getSQLDate($_POST[startdate]);
+        $tempPostsDAO = new PostsDAO();
+        $tempPostingDAO = new PostingDAO();
+        $tempPostingVO = $tempPostingDAO->getPosting($id);
+		$additional = ($_POST[additional]);
+
+        if($_POST['posttypeid']==2)
+        {
+            $tempPostVO = $tempPostsDAO->getPostDetailsByCode($_POST['postcode']);
+            $description = $_POST['description'];
+            if($tempPostingVO->getPostid()!=$_POST['postcode'])
+            {
+                if($tempPostVO->getCity()>0)
+                {
+                    $station = $tempPostVO->getCity();
+                }
+                else
+                {
+                    $station = $_POST['city'];
+                }
+            }
+            else
+            {
+				//updated by kanika on 7.11.2009 as the foreign station is not getting saved
+				$station = $_POST['city'];
+                //$station = $tempPostingDAO->getPostingStation($id);
+            }
+            if($description=='')
+            {
+                $description = $tempPostVO->getDescription();
+            }
+        }
+        else
+        {
+
+            $tempPostVO = $tempPostsDAO->getPostDetailsByCode($_POST['postcode']);
+            $station = $_POST['city'];
+            $description = $tempPostVO->getDescription();
+        }
+
+     	/*
+         * Added by pulkit as on 07th-Dec-09
+         * If additional charge is no for officer then remove his additional charge..
+         */
+    	if($_POST[additional] != "Yes")
+        {
+			$deleteAdditionalCharge = "delete from postings where isLastPosting = 2 and id='$id'";
+        	mysql_query($deleteAdditionalCharge);
+        }
+		//changes for Additional charges as on 07th-Dec-09 by pulkit
+        $fetchquery ="";
+
+    	$fetchquery = "select * from postings where id='$id' and isLastPosting = 2 ";
+        $fetchresult = mysql_query($fetchquery);
+		$address = addslashes($_POST[address]);
+		$remark = addslashes($_POST[remark]);
+		
+        if(mysql_num_rows($fetchresult)>0)
+        {
+			$updatequery="update postings set extensionNo='$_POST[extension]',address='$address',fax='$_POST[fax]',postingType='$_POST[posttypeid]',station='$station',duration='$_POST[duration]',toDate='0000-00-00',remark='$remark',modifiedBy='$_SESSION[userId]',modifiedOn=CURRENT_TIMESTAMP,postid='$_POST[postcode]',fromDate='0000-00-00',description='$description',gradeid='$_POST[grade]',additional='$_POST[additional]'";
+        }
+        else
+        {
+        	$updatequery="update postings set extensionNo='$_POST[extension]',address='$address',fax='$_POST[fax]',postingType='$_POST[posttypeid]',station='$station',duration='$_POST[duration]',toDate='$endDate',remark='$remark',modifiedBy='$_SESSION[userId]',modifiedOn=CURRENT_TIMESTAMP,postid='$_POST[postcode]',fromDate='$startDate',description='$description',gradeid='$_POST[grade]',additional='$_POST[additional]'";
+        }
+        if($additional == "Yes")
+		{
+			$updatequery = $updatequery. ",isLastPosting = '2'";
+
+		}
+		$updatequery = $updatequery. " where id='$id'";
+
+		$fetchquery ="";
+		//changes for Additional charges ends here as on 07th-Dec-09 by pulkit
+        // this is the part add by abhishek for check of additional charge exist in the table for the postid and delete it.
+					 $ConQuery="select count(id) from postings where islastposting=2 and postid='$_POST[postcode]' and id != '$id'";
+					 $ConRes= mysql_query($ConQuery);
+
+					 if(mysql_num_rows($ConRes)>0)
+					 {
+					 	$delQuery="delete from postings where islastposting=2 and postid='$_POST[postcode]'  and id != '$id'";
+						mysql_query($delQuery);
+					 }
+					///
+
+        mysql_query($updatequery);
+		//echo $updatequery;
+
+        $fetchquery = "select * from postings where id='$id'";
+        $fetchresult = mysql_query($fetchquery);
+        if(mysql_num_rows($fetchresult)>0)
+        {
+            $fetchrow = mysql_fetch_array($fetchresult);
+        }
+
+        $datequery = "SELECT max(fromDate) from postings where officerid='$fetchrow[officerid]'";
+        $dateresult = mysql_query($datequery);
+        if(mysql_num_rows($dateresult)>0)
+        {
+            $daterow = mysql_fetch_array($dateresult);
+            $postingList=$tempPostingDAO->getPostingListForOfficer($tempPostingVO->getOfficerid());
+            if(count($postingList)>0)
+            {
+                for($k=0;$k<count($postingList);$k++)
+                {
+
+                    $tempPosting1VO = $postingList[$k];
+                /*
+                 * Following lines are Comminted by pulkit to handel Two or more rows for FromDate or '0000-00-00' in To Date
+                 * as on 29th-Oct-2009
+                 */
+/* Commint starts here
+                    $tempPosting1VO->setPostParams();
+                    $date1=trim($tempPosting1VO->getFromDate());//$dob1='dd/mm/yyyy' format
+                    list($y, $m, $d) = explode('-', $date1);
+                    $mk1=mktime(0, 0, 0, $m, $d, $y);
+                    $date_disp1=strftime('%Y-%m-%d',$mk1);
+
+                    $date2=trim($daterow[0]);//$dob1='dd/mm/yyyy' format
+                    list($yy, $mm, $dd) = explode('-', $date2);
+                    $mk2=mktime(0, 0, 0, $mm, $dd, $yy);
+                    $date_disp2=strftime('%Y-%m-%d',$mk2);
+
+                    if($date_disp1==$date_disp2)
+                    {
+                        $nid = $tempPosting1VO->getId();
+                        $updatequery="update postings set isLastPosting='1' where id='$nid'";
+                        mysql_query($updatequery);
+                    }
+                    else
+                    {
+                        $nid = $tempPosting1VO->getId();
+                        $updatequery="update postings set isLastPosting='0' where id='$nid'";
+                        mysql_query($updatequery);
+                    }
+Commint Ends Here                    */
+                	//Changes by pulkit for same continue---
+                	//
+                		$nid = $tempPosting1VO->getId();
+                        $updatequery="update postings set isLastPosting='0' where id='$nid' and isLastPosting != '2'";//Condition (isLastPosting != '2') added by pulkit to handle Additional Charge As on 07th-Dec-09
+                        mysql_query($updatequery);
+                }
+                 		$updatequery="CALL UpdateIsLastPosting('$fetchrow[officerid]')";
+        				mysql_query($updatequery);
+                     //Changes ends here---
+            }
+        }
+
+    }
+
+    /*
+     * Function to delete the table
+     */
+    public function deletetable($id)
+    {
+        // added by Vandana on 23-jan to get officerid to update the last posting in case if deleting the last posting
+		$selectresult =  mysql_query("select officerid from postings where id ='$id'");
+		$fieldname[0]=mysql_field_name($selectresult, 0);
+		$officerid=mysql_fetch_object($selectresult)->$fieldname[0];
+
+		$updatequery="delete from postings where id='$id'";
+
+		// change by abhishek on 18 jan 2010
+	//	 $updatequery="update postings set isActive=0 where id='$id'";
+
+		 // change by abhishek on 18 jan 2010
+
+        mysql_query($updatequery);
+
+
+		// added by Vandana on 23-jan to update the last posting in case if deleting the last posting
+		$updatequery="CALL UpdateIsLastPosting('$officerid')";
+        mysql_query($updatequery);
+
+		return true;
+    }
+
+    public function deletefromtable($officerid)
+    {
+        $deletequery="delete from postings where officerid='$officerid'";
+        mysql_query($deletequery);
+
+        $deletequery="delete from stg_postings where officerid='$officerid'";
+        //mysql_query($deletequery);
+    }
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingList()
+    {
+        $postQuery = "select * from postings ORDER By fromDate DESC";
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+    /*
+     * Edited By Pulkit As on 14-Oct-2009
+     * Used In OptionsDAO.php for dummy-disposition-draft-list.php
+     * Added Functinality :- Checks for IsLastPosting
+     * This function gets the list of areas for the user
+     */
+
+    /*
+      	Modification:	new argument $offcierid was included. Query modified accordingly
+      	Modified by: Vishal Sahu.
+      	Date: 05-March-2010
+
+     */
+    public function getPostingListByPostId($postid,$officerid, $IsLastPosting='')
+    {
+        $postQuery = "select * from postings WHERE postid='$postid' and officerid='$officerid'" ;
+       // echo $postQuery;
+        if($IsLastPosting != "")
+        {
+        	$postQuery = $postQuery." and islastposting = 1";
+        }
+        //echo $postQuery;
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+ /*
+     * Edited By kanika As on 06.01.2010
+     * Used In OptionsDAO.php for dummy-disposition-draft-list.php
+     * Added Functinality :- Checks for additional data
+     *  */
+    public function getAdditionalDataForPost($postid)
+    {
+        $postQuery = "select * from postings left outer join officers on postings.officerid=officers.id WHERE postid='$postid' and additional like 'yes' ";
+        if($IsLastPosting != "")
+        {
+        	$postQuery = $postQuery." and islastposting = 2";
+        }
+//echo  $postQuery;exit;
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+
+// this is bya abhishek on 12 jan 2010 for addtional  and all data
+	 public function getOfficerListForPostCodeAddtional($postid)
+    {
+        $postQuery = "select DISTINCT stg_postings.officerid from stg_postings,officers where stg_postings.postid='$postid' and stg_postings.isActive=1 AND officers.officerStatus='5' AND ((stg_postings.isLastPosting='1') or (stg_postings.isLastPosting='2'))  AND stg_postings.officerid=officers.id order by stg_postings.fromDate DESC";
+        $postResult = mysql_query($postQuery);
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new StgPostingsVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+
+        return $postArray;
+    }
+
+	// by abhishek on 12 jan 2010
+
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingListByPostIdOfficerId($postid,$officerid)
+    {
+        $postQuery = "select * from postings WHERE postid='$postid' AND officerid='$officerid'";
+        //echo $postQuery;
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+        }
+        return $tempPostVO;
+    }
+
+    /*
+     * This function updates the status for the area
+     */
+    public function updatestatus($status,$id)
+    {
+        if($status=='1')
+        {
+            $areaQuery = "update postings set isActive='0' where id='$id'";
+        }else
+        {
+            $areaQuery = "update postings set isActive='1' where id='$id'";
+        }
+        $areaResult = mysql_query($areaQuery);
+    }
+
+    /*
+     * Function to update the table
+     */
+    public function updatepostingdetails($code,$fieldname,$value,$officerid)
+	{
+		$updatequery = "update postings set " . $fieldname . "='".$value."' WHERE postid='$code' AND officerid='$officerid'";
+        mysql_query($updatequery);
+    }
+    /*
+     * This function gets the posting details
+     */
+    public function getPosting($id)
+    {
+        $postingQuery = "select * from postings where id='$id'";
+        //echo $postingQuery;
+        $postingResult = mysql_query($postingQuery);
+
+        $tempPostingVO = new PostingVO();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postingResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postingResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postingResult))
+        {
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostingVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+        }
+        $tempPostingVO->setPostParams();
+        return $tempPostingVO;
+    }
+
+    /*
+     * This function gets the posting details
+     */
+    public function getPostingStation($id)
+    {
+        $postingQuery = "select * from postings where id='$id'";
+        //echo $postingQuery;
+        $postingResult = mysql_query($postingQuery);
+
+        $row=mysql_fetch_array($postingResult);
+
+        return $row[station];
+    }
+
+    /*
+     * This function gets the search for a name
+     */
+    public function getPostingSearchResults()
+    {
+        $civilCode =$_POST['civilCode'];
+        /*$city = $_POST['city'];
+        $gradeid = $_POST['gradeid'];
+        $postcodeid = $_POST['postcodeid'];*/
+        $officerId = "MO".$civilCode;
+        $tempSearchQuery = "select p.*,o.name as officername from postings p,officers o where p.officerid ='$officerId' AND p.officerid=o.id order by p.fromDate ASC";
+
+        //$tempSearchQuery = $tempSearchQuery." order by p.fromDate ASC";
+
+        //Array for areas
+        $postingArray = array();
+
+        $officerResult = mysql_query($tempSearchQuery);
+
+        // We find the fields number
+        $numfields=mysql_num_fields($officerResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($officerResult, $i);
+        }
+
+        while($row=mysql_fetch_object($officerResult))
+        {
+            $tempPostingVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostingVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $tempPostingVO->setPostParams();
+            $postingArray[count($postingArray)]= $tempPostingVO;
+        }
+
+        //Set the query in session
+        $_SESSION['searchResults']=serialize($postingArray);
+
+        return $postingArray;
+    }
+
+    /*
+     * This function gets the search for a name
+     */
+    public function getDispositionListResults()
+    {
+        $civilCode =$_POST['civilCode'];
+        /*$city = $_POST['city'];
+        $gradeid = $_POST['gradeid'];
+        $postcodeid = $_POST['postcodeid'];*/
+        $officerId = "MO".$civilCode;
+        $tempSearchQuery = "select p.*,o.name as officername from postings p,officers o where p.officerid ='$officerId' AND p.officerid=o.id order by p.fromDate ASC";
+
+        //$tempSearchQuery = $tempSearchQuery." order by p.fromDate ASC";
+
+        //Array for areas
+        $postingArray = array();
+
+        $officerResult = mysql_query($tempSearchQuery);
+
+        // We find the fields number
+        $numfields=mysql_num_fields($officerResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($officerResult, $i);
+        }
+
+        while($row=mysql_fetch_object($officerResult))
+        {
+            $tempPostingVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostingVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $tempPostingVO->setPostParams();
+            $postingArray[count($postingArray)]= $tempPostingVO;
+        }
+
+        //Set the query in session
+        $_SESSION['searchResults']=serialize($postingArray);
+
+        return $postingArray;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingListForOfficer($id)
+    {
+        //$postQuery = "select postings.*,posts.address,posts.extensionNo,posts.fax from postings,posts where postings.officerid='$id' AND postings.postid=posts.code order by postings.fromDate ASC";
+        $postQuery = "select postings.* from postings left outer join posts on postings.postid=posts.code where postings.officerid='$id'  order by postings.fromDate ASC";
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+        $k=0;
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                if($fieldname[$i]=="station")
+                {
+                    $tempPostVO->cityid=$row->$fieldname[$i];
+                }
+                else
+                {
+                    $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+                }
+            }
+            $tempPostVO->setCnt($k);
+            $tempPostVO->setPostParams();
+            $k++;
+			
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+		
+        return $postArray;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getBasicPostingListForOfficer($id)
+    {
+        $id = trim($id);
+        $postQuery = "select cityid,fromDate,toDate from (select posts.city as cityid,postings.fromDate,postings.toDate from postings,posts where postings.officerid ='$id' AND postings.postid=posts.code AND postings.postingType='1' UNION select postings.station as cityid,postings.fromDate,postings.toDate from postings,posts where postings.officerid = '$id' AND postings.postid=posts.code AND postings.postingType='2')A order by fromDate DESC";
+        //$postQuery = "select posts.city as cityid,postings.fromDate,postings.toDate from postings,posts where postings.officerid='$id' AND postings.postid=posts.code AND postings.postingType='1' order by postings.fromDate DESC";
+        //echo $postQuery."<br>";
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+        $k=0;
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            //$tempPostVO->setCnt($k);
+            //$tempPostVO->setPostParams();
+            //$k++;
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getBasicPostingListForOfficerForOption($id)
+    {
+        $id = trim($id);
+        $postQuery = "select cityid,fromDate,toDate,postid,description,regionid from (select posts.city as cityid,postings.fromDate,postings.toDate,posts.code as postid, posts.description,cities.regionid from postings,posts,cities where postings.officerid ='$id' AND postings.postid=posts.code AND postings.postingType='1' AND posts.city=cities.id UNION select postings.station as cityid,postings.fromDate,postings.toDate,postings.postid as postid,postings.description,cities.regionid from postings,posts,cities where postings.officerid = '$id' AND postings.postid=posts.code AND postings.postingType='2' AND postings.station=cities.id)A order by fromDate DESC";
+        //$postQuery = "select posts.city as cityid,postings.fromDate,postings.toDate from postings,posts where postings.officerid='$id' AND postings.postid=posts.code AND postings.postingType='1' order by postings.fromDate DESC";
+        //echo $postQuery."<br>";
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+        $k=0;
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            //$tempPostVO->setCnt($k);
+            //$tempPostVO->setPostParams();
+            //$k++;
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+	public function getOptionPostingListForOfficerLastPosting($id) {
+        $id = trim($id);
+//       $postQuery = "select cityid,fromDate,toDate,postid,description,regionid, sequence from
+//		        (select posts.city as cityid, posts.sequence, postings.fromDate,postings.toDate,posts.code as postid, posts.description,cities.regionid from postings,posts,cities where postings.officerid ='$id' AND postings.postid=posts.code AND postings.postingType='1' AND posts.city=cities.id
+//        UNION select postings.station as cityid, posts.sequence, postings.fromDate,postings.toDate,postings.postid as postid,postings.description,cities.regionid  from postings,posts,cities where postings.officerid = '$id' AND postings.postid=posts.code AND postings.postingType='2' AND postings.station=cities.id)A order by fromDate DESC LIMIT 1";
+        $postQuery = "select posts.city as cityid, posts.sequence, postings.fromDate,postings.toDate,posts.code as postid, posts.description,
+                    cities.regionid, cities.name as cityname, regions.name as regionname 
+                    from postings
+                    join posts  on postings.postid=posts.code
+                    join cities on postings.station=cities.id OR posts.city=cities.id
+                    join regions on cities.regionid = regions.id
+                    where postings.officerid ='$id' AND  postings.postingType in('1','2') AND  postings.islastposting ='1'
+                    order by fromDate DESC LIMIT 1";
+
+        $postResult = mysql_query($postQuery);
+        $tempPostVO = new PostingVO();
+        if (mysql_num_rows($postResult) > 0) {
+            // We find the fields number
+            $numfields = mysql_num_fields($postResult);
+
+            // Now we put the names of fields in a Array
+            for ($i = 0; $i < $numfields; $i++) {
+                $fieldname[$i] = mysql_field_name($postResult, $i);
+            }
+            $k = 0;
+            while ($row = mysql_fetch_object($postResult)) {
+                //Finally we assign the new variables
+                for ($i = 0; $i < $numfields; $i++) {
+                    $tempPostVO->$fieldname[$i] = $row->$fieldname[$i];
+                }
+            }
+        }
+        return $tempPostVO;
+    }
+
+    public function getOptionPostingListForOfficer($id)
+    {
+        $id = trim($id);
+//       $postQuery = "select cityid,fromDate,toDate,postid,description,regionid, sequence from
+//		        (select posts.city as cityid, posts.sequence, postings.fromDate,postings.toDate,posts.code as postid, posts.description,cities.regionid from postings,posts,cities where postings.officerid ='$id' AND postings.postid=posts.code AND postings.postingType='1' AND posts.city=cities.id
+//        UNION select postings.station as cityid, posts.sequence, postings.fromDate,postings.toDate,postings.postid as postid,postings.description,cities.regionid  from postings,posts,cities where postings.officerid = '$id' AND postings.postid=posts.code AND postings.postingType='2' AND postings.station=cities.id)A order by fromDate DESC LIMIT 1";
+        $postQuery = "select posts.city as cityid, posts.sequence, postings.fromDate,postings.toDate,posts.code as postid, posts.description,
+                    cities.regionid, cities.name as cityname, regions.name as regionname 
+                    from postings
+                    join posts  on postings.postid=posts.code
+                    join cities on postings.station=cities.id OR posts.city=cities.id
+                    join regions on cities.regionid = regions.id
+                    where postings.officerid ='$id' AND  postings.postingType in('1','2')
+                    order by fromDate DESC LIMIT 1";
+	
+        $postResult = mysql_query($postQuery);
+		$tempPostVO = new PostingVO();
+		if(mysql_num_rows($postResult)>0)
+		{
+			// We find the fields number
+			$numfields=mysql_num_fields($postResult);
+
+			// Now we put the names of fields in a Array
+			for($i=0;$i<$numfields;$i++)
+			{
+				$fieldname[$i]=mysql_field_name($postResult, $i);
+			}
+			$k=0;
+			while($row=mysql_fetch_object($postResult))
+			{
+				//Finally we assign the new variables
+				for($i=0;$i<$numfields;$i++)
+				{
+					$tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+				}
+			}
+		}
+        return $tempPostVO;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getOptionStgPostingListForOfficer($id)
+    {
+        $id = trim($id);
+        $postQuery = "select city,fromDate,toDate,postid,postdescription,region,regionname,cityname from stg_postings where officerid ='$id'order by fromDate DESC LIMIT 1";
+		$postResult = mysql_query($postQuery);
+		
+		$tempPostVO = new StgPostingsVO();
+
+		if(mysql_num_rows($postResult)>0)
+		{
+			// We find the fields number
+			$numfields=mysql_num_fields($postResult);
+
+			// Now we put the names of fields in a Array
+			for($i=0;$i<$numfields;$i++)
+			{
+				$fieldname[$i]=mysql_field_name($postResult, $i);
+			}
+			$k=0;
+			while($row=mysql_fetch_object($postResult))
+			{
+				//Finally we assign the new variables
+				for($i=0;$i<$numfields;$i++)
+				{
+					$tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+				}
+			}
+		}
+        return $tempPostVO;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getDispositionPostingListForOfficer($id)
+    {
+        $id = trim($id);
+        $postQuery = "select cityid,fromDate,toDate,postid from (select posts.city as cityid,postings.fromDate,postings.toDate,postings.postid from postings,posts where postings.officerid ='$id' AND postings.postid=posts.code AND postings.postingType='1' UNION select postings.station as cityid,postings.fromDate,postings.toDate,postings.postid from postings,posts where postings.officerid = '$id' AND postings.postid=posts.code AND postings.postingType='2')A order by fromDate DESC LIMIT 1";
+        //$postQuery = "select posts.city as cityid,postings.fromDate,postings.toDate from postings,posts where postings.officerid='$id' AND postings.postid=posts.code AND postings.postingType='1' order by postings.fromDate DESC";
+        //echo $postQuery."<br>";
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+        $k=0;
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            //$tempPostVO->setCnt($k);
+            //$tempPostVO->setPostParams();
+            //$k++;
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getShortPostingListForOfficer($id)
+    {
+        /**
+			Modification	: $postQuery modified. records selected from stg_postings instead of posts and postings tables.
+			Modified by		: Vishal Sahu
+			Date			: 17-02-2009
+		*/
+
+        $postQuery = "select city as cityid, fromDate, toDate from stg_postings where officerid='$id' and isLastPosting=1 order by fromDate DESC LIMIT 1";
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+        $tempPostVO = new PostingVO();
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+        $k=0;
+        while($row=mysql_fetch_object($postResult))
+        {
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $k++;
+            //$postArray[count($postArray)]= $tempPostVO;
+        }
+        return $tempPostVO;
+    }
+
+    public function getRegionDetailsForOfficer($id)
+    {
+        $id = trim($id);
+        $tempCitiesDAO = new CitiesDAO();
+        $postQuery = "select region,sequence from stg_postings where officerid='$id' order by fromDate DESC LIMIT 1";
+        //echo $postQuery;
+        $postResult = mysql_query($postQuery);
+        $postRow = mysql_fetch_array($postResult);
+
+        $tempRegionName = $postRow[0] . "|" . $postRow[1];;
+        return $tempRegionName;
+    }
+
+    public function getCityBasicPostingListForOfficer($id)
+    {
+        $id = trim($id);
+        $tempCitiesDAO = new CitiesDAO();
+        $postQuery = "select posts.city as cityid from postings,posts where postings.officerid='$id' AND postings.postid=posts.code order by postings.fromDate DESC LIMIT 1";
+        //echo $postQuery;
+        $postResult = mysql_query($postQuery);
+        $postRow = mysql_fetch_array($postResult);
+
+        $tempRegionName = $tempCitiesDAO->getRegionNameByCity($postRow['cityid']);
+        return $tempRegionName;
+    }
+
+    public function getCityBasicPostingListForOfficerForStgPostings($id)
+    {
+        $id = trim($id);
+        $tempCitiesDAO = new CitiesDAO();
+        $postQuery = "select regionname,sequence,region from stg_postings where officerid='$id' order by fromDate DESC LIMIT 1";
+        //echo $postQuery;
+        $postResult = mysql_query($postQuery);
+        if(mysql_num_rows($postResult)>0)
+        {
+            $postRow = mysql_fetch_array($postResult);
+            $tempRegionName = $postRow[0] . "|" . $postRow[1] . "|" . $postRow[2];
+        }
+        else
+        {
+            $tempRegionName = "|||";
+        }
+        return $tempRegionName;
+    }
+
+    public function getAreaRegionBasicPostingListForOfficer($id)
+    {
+        $tempRegionAreaList = "|";
+        $postQuery = "select posts.city as cityid from postings,posts where postings.officerid='$id' AND postings.postid=posts.code order by postings.fromDate DESC LIMIT 1";
+        //echo $postQuery . "<br>";
+        $tempCitiesDAO = new CitiesDAO();
+        $postResult = mysql_query($postQuery);
+        if(mysql_num_rows($postResult)>0)
+        {
+            $postRow = mysql_fetch_array($postResult);
+            $tempRegionAreaList = $tempCitiesDAO->getRegionAreaByCity($postRow[cityid]);
+        }
+
+        return $tempRegionAreaList;
+    }
+
+    public function getAreaRegionForOfficerFromStgpostings($id)
+    {
+        $tempRegionAreaList = "|";
+        $postQuery = "select stg_postings.city,stg_postings.region,regions.sequence from stg_postings,regions where stg_postings.officerid='$id' AND stg_postings.region=regions.id order by stg_postings.fromDate DESC LIMIT 1";
+        $postResult = mysql_query($postQuery);
+        if(mysql_num_rows($postResult)>0)
+        {
+            $postRow = mysql_fetch_array($postResult);
+            $tempRegionAreaList = $postRow[0] . "|" . $postRow[1] . "|" . $postRow[2];
+        }
+
+        return $tempRegionAreaList;
+    }
+
+    public function getDispositionBasicPostingListForOfficer($id)
+    {
+        $tempRegionAreaList = "|";
+        $postQuery = "select posts.city as cityid,posts.posttypeid,posts.code,posts.name from postings,posts where postings.officerid='$id' AND postings.postid=posts.code order by postings.fromDate DESC LIMIT 1";
+        //echo $postQuery . "<br>";
+        $tempCitiesDAO = new CitiesDAO();
+        $postResult = mysql_query($postQuery);
+        if(mysql_num_rows($postResult)>0)
+        {
+            $postRow = mysql_fetch_array($postResult);
+            $tempRegionAreaList = $tempCitiesDAO->getRegionAreaByCity($postRow[cityid]) . "|" . $postRow[posttypeid] . "|" . $postRow[code] . "|" . $postRow[name];
+            //$tempRegionAreaList = $tempCitiesDAO->getRegionAreaByCity($postRow[cityid]) . "|" . $postRow[posttypeid];
+        }
+        return $tempRegionAreaList;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingVaultServiceHistory($tempPTList)
+    {
+        $serviceHistory = array();
+
+        if(count($tempPTList)>0)
+        {
+            for($j=0;$j<count($tempPTList);$j++)
+            {
+                $finalYears =0;
+                $tempPTVO = $tempPTList[$j];
+                $tempPList = $this->getPostingListForOfficerByPostType($_SESSION[officerid], $tempPTVO->getId());
+
+                $totalMonths = 0;
+                $totalYears = 0;
+                if(count($tempPList)>0)
+                {
+                    for($k=0;$k<count($tempPList);$k++)
+                    {
+                        $tempPVO = $tempPList[$k];
+                        if($tempPVO->getToDate()!="0000-00-00")
+                        {
+                            $datearray = getPostingDateDifferenceArrayReturn($tempPVO->getFromDate(),$tempPVO->getToDate());
+                            if($datearray[days]>=15)
+                            {
+                                $months = $datearray[months]+1;
+                            }
+                            elseif($datearray[days]<15)
+                            {
+                                $months = $datearray[months];
+                            }
+                            $totalYears += $datearray[years];
+                            $totalMonths += $months;
+
+                        }
+                    }
+                }
+                $finalYears = round(($totalMonths/12),2)+$totalYears;
+                //echo $finalYears."<br/>";
+                $finalDateArray = year2monthsNdays($finalYears);
+                $serviceHistory[$j]=$finalDateArray[year]." Years & ".$finalDateArray[month]." Months";
+            }
+        }
+        return $serviceHistory;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingListForOfficerByPostType($officerid,$posttypeid)
+    {
+        $postQuery = "select postings.fromDate,postings.toDate,posts.city as cityid from postings,posts where postings.officerid='$officerid' AND posts.posttypeid='$posttypeid' AND posts.code=postings.postid";
+        //echo $postQuery . "<br>";
+        $postResult = mysql_query($postQuery);
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            //$tempPostVO->setPostParams();
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingVaultClassHistory()
+    {
+        $tempPTList = array('2','3','4');
+        $tempCityClass = array('1','2','3');
+        //print_r(count($tempCityClass));
+        $serviceHistory = array();
+
+        $csmonths=0;
+        for($p=0;$p<count($tempCityClass);$p++)
+        {
+            //$cityclass = $tempCityClass[$k];
+            //echo $cityclass . "<br>";
+            if(count($tempPTList)>0)
+            {
+                for($j=0;$j<count($tempPTList);$j++)
+                {
+                    $finalYears =0;
+                    $totalYears=0;
+                    $totalMonths=0;
+                    //$tempPTVO = $tempPTList[$j];
+                    $tempPList = $this->getPostingListForOfficerByCity($_SESSION[officerid], $tempPTList[$j],$tempCityClass[$p]);
+                    if(count($tempPList)>0)
+                    {
+                        $lastPostingVO = $tempPList[count($tempPList)-1];
+                        //Instantiate prevous city
+                        $prevCity =$lastPostingVO->getCityid();
+                        for($k=0;$k<count($tempPList);$k++)
+                        {
+                            $tempPVO = $tempPList[$k];
+                            if($tempPVO->getToDate()!="0000-00-00")
+                            {
+                                $datearray = getPostingDateDifferenceArrayReturn($tempPVO->getFromDate(),$tempPVO->getToDate());
+                                if($datearray[days]>=15)
+                                {
+                                    $months = $datearray[months]+1;
+                                }
+                                elseif($datearray[days]<15)
+                                {
+                                    $months = $datearray[months];
+                                }
+                                $totalYears += $datearray[years];
+                                $totalMonths += $months;
+                            }
+                        }
+                    }
+                    $finalYears = round(($totalMonths/12),2)+$totalYears;
+                    //echo $finalYears."<br/>";
+                    $finalDateArray = year2monthsNdays($finalYears);
+                    $serviceHistory[$tempCityClass[$p]][$tempPTList[$j]]=$finalDateArray[year]." Years & ".$finalDateArray[month]." Months";
+
+                }//for pt ends
+            }// if for pt ends
+        }//city for class
+        return $serviceHistory;
+    }
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingVaultCSHistory()
+    {
+        $tempCityClass = array('1','2','3');
+        //print_r(count($tempCityClass));
+        $serviceHistory = array();
+
+        for($p=0;$p<count($tempCityClass);$p++)
+        {
+            $finalYears =0;
+            $totalYears=0;
+            $totalMonths=0;
+            //$tempPTVO = $tempPTList[$j];
+            $tempPList = $this->getPostingListForOfficerByCityClass($_SESSION[officerid], $tempCityClass[$p]);
+            if(count($tempPList)>0)
+            {
+                $lastPostingVO = $tempPList[0];
+                //Instantiate prevous city
+                $prevCity =$lastPostingVO->getCityid();
+                for($k=0;$k<count($tempPList);$k++)
+                {
+                    $tempPVO = $tempPList[$k];
+                    if($tempPVO->getToDate()!="0000-00-00")
+                    {
+                        $datearray = getPostingDateDifferenceArrayReturn($tempPVO->getFromDate(),$tempPVO->getToDate());
+                        if($datearray[days]>=15)
+                        {
+                            $months = $datearray[months]+1;
+                        }
+                        elseif($datearray[days]<15)
+                        {
+                            $months = $datearray[months];
+                        }
+                        $totalYears += $datearray[years];
+                        $totalMonths += $months;
+                    }
+                }
+            }
+            $finalYears = round(($totalMonths/12),2)+$totalYears;
+            //echo $finalYears."<br/>";
+            $finalDateArray = year2monthsNdays($finalYears);
+            $serviceHistory[$tempCityClass[$p]]=$finalDateArray[year]." Years & ".$finalDateArray[month]." Months";
+
+            //$serviceHistory[$tempCityClass[$p]]=$finaltotaldays;
+        }
+
+        return $serviceHistory;
+    }
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getCurrentPostingCS($id)
+    {
+        $tempPList = $this->getBasicPostingListForOfficer($id);
+        $serviceHistory = array();
+
+        $finaltotaldays = 0;
+
+        $finalYears =0;
+        $totalYears=0;
+        $totalMonths=0;
+        if(count($tempPList)>0)
+        {
+            $lastPostingVO = $tempPList[0];
+
+            //Instantiate prevous city
+            $prevCity =$lastPostingVO->getCityid();
+            if($prevCity!="")
+            {
+                for($k=0;$k<count($tempPList);$k++)
+                {
+                    $tempPVO = $tempPList[$k];
+                    if($tempPVO->getCityid()==$prevCity)
+                    {
+                        if($tempPVO->getToDate()=='' || $tempPVO->getToDate()=='0000-00-00')
+                        {
+                            $tempPVO->setToDate('2009-03-01');
+                        }
+
+                        $datearray = getPostingDateDifferenceArrayReturn($tempPVO->getFromDate(),$tempPVO->getToDate());
+                        if($datearray[days]>=15)
+                        {
+                            $months = $datearray[months]+1;
+                        }
+                        elseif($datearray[days]<15)
+                        {
+                            $months = $datearray[months];
+                        }
+                        $totalYears += $datearray[years];
+                        $totalMonths += $months;
+                        //$serviceHistory[0] = getPostingDateDifference($tempPVO->getFromDate(),'2009-03-01');
+                    }
+                }
+            }
+            else
+            {
+                $serviceHistory[0] = "";
+                return $serviceHistory[0];
+            }
+        }
+        $finalYears = round(($totalMonths/12),2)+$totalYears;
+        $finalDateArray = year2monthsNdays($finalYears);
+        $serviceHistory[0]=$finalDateArray[year]." Years & ".$finalDateArray[month]." Months";
+
+        return $serviceHistory[0];
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getCurrentPostingCSByRegion($officerid,$regionid='')
+    {
+        //echo $regionid . "<br>";
+		$tempStgPostingsDAO = new StgPostingsDAO();
+        //$serviceHistory = array();
+		$serviceHistory = "";
+
+		$finalYears =0;
+		$totalDateDiff=0;
+		$tempPList = $tempStgPostingsDAO->getPostingForOfficerWithoutClass($officerid);
+		if(count($tempPList)>0)
+		{
+			$lastPostingVO = $tempPList[0];
+
+			//Instantiate prevous city
+			//$prevregionid = $lastPostingVO->getRegion();
+
+            $tdaysdiff = 0;
+            $tmonthsdiff = 0;
+            $addflag = false;
+            for($k=0;$k<count($tempPList);$k++)
+            {
+                $tempPVO = $tempPList[$k];
+                if($regionid==$tempPVO->getRegion() && ($tempPVO->getTobetreatedas()==2 OR $tempPVO->getTobetreatedas()==3))
+                {
+                    if($k==0)
+                    {
+                        if($tempPVO->getToDate()!="0000-00-00")
+                        {
+                            $totalDateDiff=$totalDateDiff + $tempPVO->getPolicydatediff();
+                            if($totalDateDiff<0)
+                            {
+                                $totalDateDiff = 0;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if($tmonthsdiff<9)
+                        {
+                            $totalDateDiff=$totalDateDiff + $tdaysdiff;
+                            $addflag = true;
+                        }
+                    }
+                }
+                else
+                {
+                    if($tempPVO->getToDate()!="0000-00-00")
+                    {
+                        $chkdatediff = date_diffnew($tempPVO->getToDate(), $tempPVO->getFromDate());
+                        if($chkdatediff[months_total]<9)
+                        {
+                            $tdaysdiff += $chkdatediff[days_total];
+                            $tmonthsdiff += $chkdatediff[months_total];
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+                }
+			}
+		}
+		else
+		{
+			$totalDateDiff = 0;
+		}
+        $finalDateArray=getYearMonthsFromDays($totalDateDiff);
+		$serviceHistory=$finalDateArray[year] . " Years & " . $finalDateArray[month] . " Months";
+        return $serviceHistory;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingVaultZoneCSHistory($regionid)
+    {
+        $tempCityClass = array('1','2','3');
+        //print_r(count($tempCityClass));
+        $serviceHistory = array();
+
+        for($p=0;$p<count($tempCityClass);$p++)
+        {
+            $finalYears =0;
+            $totalYears=0;
+            $totalMonths=0;
+            //$tempPTVO = $tempPTList[$j];
+            $tempPList = $this->getPostingListForOfficerByZoneCityClass($_SESSION[officerid], $tempCityClass[$p],$regionid);
+            if(count($tempPList)>0)
+            {
+                $lastPostingVO = $tempPList[0];
+                //Instantiate prevous city
+                $prevCity =$lastPostingVO->getCityid();
+                for($k=0;$k<count($tempPList);$k++)
+                {
+                    $totalmonths = 0;
+                    $tempPVO = $tempPList[$k];
+                    if($tempPVO->getToDate()!="0000-00-00")
+                    {
+                        $datearray = getPostingDateDifferenceArrayReturn($tempPVO->getFromDate(),$tempPVO->getToDate());
+                        if($datearray[days]>=15)
+                        {
+                            $months = $datearray[months]+1;
+                        }
+                        elseif($datearray[days]<15)
+                        {
+                            $months = $datearray[months];
+                        }
+                        $totalYears += $datearray[years];
+                        $totalMonths += $months;
+                    }
+                }
+            }
+            $finalYears = round(($totalMonths/12),2)+$totalYears;
+            //echo $finalYears."<br/>";
+            $finalDateArray = year2monthsNdays($finalYears);
+            $serviceHistory[$tempCityClass[$p]]=$finalDateArray[year]." Years & ".$finalDateArray[month]." Months";
+        }
+
+        return $serviceHistory;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingListForOfficerByCity($officerid,$posttypeid,$cityclassid)
+    {
+        $postQuery = "select postings.fromDate,postings.toDate,posts.city as cityid from postings,posts where postings.officerid='$officerid' AND posts.posttypeid='$posttypeid' AND posts.code=postings.postid AND posts.city IN (SELECT cities.id FROM cities, cityclass WHERE cities.cityclassid = '$cityclassid' AND cities.cityclassid = cityclass.id) order by postings.fromDate DESC";
+        //echo $postQuery . "<br>";
+        $postResult = mysql_query($postQuery);
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            //$tempPostVO->setPostParams();
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingListForOfficerByCityClass($officerid,$cityclassid)
+    {
+        $postQuery = "select postings.fromDate,postings.toDate,posts.city as cityid from postings,posts where postings.officerid='$officerid' AND posts.posttypeid in ('2','3') AND posts.code=postings.postid AND posts.city IN (SELECT cities.id FROM cities, cityclass WHERE cities.cityclassid = '$cityclassid' AND cities.cityclassid = cityclass.id) order by postings.fromDate DESC";
+        //echo $postQuery . "<br>";
+        $postResult = mysql_query($postQuery);
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $tempPostVO->setPostParams();
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingListForOfficerByZoneCityClass($officerid,$cityclassid,$regionid)
+    {
+        $postQuery = "select postings.fromDate,postings.toDate,posts.city as cityid from postings,posts where postings.officerid='$officerid' AND posts.posttypeid in ('2','3') AND posts.code=postings.postid AND posts.city IN (SELECT cities.id FROM cities, cityclass WHERE cities.cityclassid = '$cityclassid' AND cities.regionid='$regionid' AND cities.cityclassid = cityclass.id) order by postings.fromDate DESC";
+        //echo $postQuery . "<br>";
+        $postResult = mysql_query($postQuery);
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $tempPostVO->setPostParams();
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingListForOfficerByZoneCity($officerid,$posttypeid,$cityclassid,$regionid)
+    {
+        $postQuery = "select postings.fromDate,postings.toDate,posts.city as cityid from postings,posts where postings.officerid='$officerid' AND posts.posttypeid='$posttypeid' AND posts.code=postings.postid AND posts.city IN (SELECT cities.id FROM cities, cityclass WHERE cities.cityclassid = '$cityclassid' AND cities.regionid='$regionid' AND cities.cityclassid = cityclass.id) order by postings.fromDate DESC";
+        //echo $postQuery . "<br>";
+        $postResult = mysql_query($postQuery);
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $tempPostVO->setPostParams();
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+    /*
+     * This function gets the list of areas for the user
+     */
+    public function getPostingVaultZoneClassHistory($regionid)
+    {
+        $tempPTList = array('2','3','4');
+        $tempCityClass = array('1','2','3');
+        //print_r(count($tempCityClass));
+        $serviceHistory = array();
+
+        $csmonths=0;
+        for($p=0;$p<count($tempCityClass);$p++)
+        {
+            //$cityclass = $tempCityClass[$k];
+            //echo $cityclass . "<br>";
+            if(count($tempPTList)>0)
+            {
+                for($j=0;$j<count($tempPTList);$j++)
+                {
+                    $finalYears =0;
+                    $totalYears=0;
+                    $totalMonths=0;
+                    //$tempPTVO = $tempPTList[$j];
+                    $tempPList = $this->getPostingListForOfficerByZoneCity($_SESSION[officerid], $tempPTList[$j],$tempCityClass[$p],$regionid);
+                    if(count($tempPList)>0)
+                    {
+                        $lastPostingVO = $tempPList[count($tempPList)-1];
+                        //Instantiate prevous city
+                        $prevCity =$lastPostingVO->getCityid();
+                        for($k=0;$k<count($tempPList);$k++)
+                        {
+                            //$totalmonths = 0;
+                            $tempPVO = $tempPList[$k];
+                            if($tempPVO->getToDate()!="0000-00-00")
+                            {
+                                $datearray = getPostingDateDifferenceArrayReturn($tempPVO->getFromDate(),$tempPVO->getToDate());
+                                if($datearray[days]>=15)
+                                {
+                                    $months = $datearray[months]+1;
+                                }
+                                elseif($datearray[days]<15)
+                                {
+                                    $months = $datearray[months];
+                                }
+                                $totalYears += $datearray[years];
+                                $totalMonths += $months;
+                            }
+                        }
+                    }
+                    $finalYears = round(($totalMonths/12),2)+$totalYears;
+                    //echo $finalYears."<br/>";
+                    $finalDateArray = year2monthsNdays($finalYears);
+                    $serviceHistory[$tempCityClass[$p]][$tempPTList[$j]]=$finalDateArray[year]." Years & ".$finalDateArray[month]." Months";
+                }
+            }
+        }
+        return $serviceHistory;
+    }
+
+
+    /**
+     * This function will add new spouse vo to session
+     * @param <type> $row
+     * @return <type>
+     */
+    public function deletevofrompostarray($row='')
+    {
+        $tempOfficerVO = unserialize($_SESSION['officerVO']);
+        $tempPostingVOList =$tempOfficerVO->getPostingList();
+
+        if($row!='')
+        {
+            for($i=0;$i<count($tempPostingVOList);$i++)
+            {
+                if($row==$i)
+                {
+                    for($k=$i+1;$k<count($tempPostingVOList);$k++)
+                    {
+                        $tempPostingVO = $tempPostingVOList[$k];
+                        $tempPostingVO->setCnt($tempPostingVO->getCnt()-1);
+                        $tempPostingVOList[$k]=$tempPostingVO;
+                    }
+                    unset($tempPostingVOList[$row]);
+
+                }
+            }
+            //Get the array values in new array
+            $finalArray = array_values($tempPostingVOList);
+
+
+            //Set it in vo
+            $tempOfficerVO->setPostingList($finalArray);
+
+            //Set it in session
+            $_SESSION['officerVO']= serialize($tempOfficerVO);
+        }
+        return $tempOfficerVO;
+    }
+
+	/*
+     * This function gets Transfer Order Status For PostCode
+     * added by mukesh
+     */
+    public function getTransferOrderStatusForPostCode($postid)
+    {
+        $postQuery = "select v.officer_id from transfer_order_officer_view v inner join posts p on v.currentPost=p.id where ";
+		$postQuery .= "v.isCancelled=0 and v.orderStatus like 'Applied' and v.status like 'NEW' and p.code ='$postid' limit 1";
+		$postResult = mysql_query($postQuery);
+
+        while($row=mysql_fetch_array($postResult))
+        {
+            $officerId = $row['officer_id'];
+        }
+
+        return $officerId;
+    }
+
+	/*
+     * This function gets Transfer Order new joining Status For PostCode
+     * added by mukesh
+	 //Updated By kanika on 30.11.2009 for dummy disposition
+     */
+    public function getTransferOrderNewJoiningStatus($postid)
+    {
+        $postQuery ="select * from transfer_order_officer_view where isCancelled=0 and orderStatus like 'Applied' and status NOT like 'JOINED' and newPostCode ='$postid' limit 1 ";
+		//$postQuery .=" and modifiedon=(select max(modifiedon) from transfer_order_officer_view where newPostCode ='$postid')"; //Commented by pulkit not required as on 17th-Dec-09
+//echo $postQuery."</br>";
+		$postResult = mysql_query($postQuery);
+
+
+
+        return $postResult;
+    }
+
+	/*
+     * This function gets Transfer Order new joining Status For PostCode
+	 //Updated By kanika on 8.01.2010  for dummy disposition Dep
+     */
+    public function getTransferOrderNewJoiningStatusDep($postid)
+    {
+        $postQuery ="select * from transfer_order_officer_view where isCancelled=0 and orderStatus like 'Applied' and status NOT like 'JOINED' and newPostCode ='$postid' ";
+		//$postQuery .=" and modifiedon=(select max(modifiedon) from transfer_order_officer_view where newPostCode ='$postid')"; //Commented by pulkit not required as on 17th-Dec-09
+//echo $postQuery."</br>";
+		$postResult = mysql_query($postQuery);
+
+
+
+        return $postResult;
+    }
+
+ 	/*
+     * This function gets the list of areas for the user
+     * added by mukesh
+     */
+    public function getTransOrderJoinDetail($officerid,$postcode)
+    {
+        $postQuery ="select v.newCityName cityname,v.newRegionId region,a.id area,c.cityclassid cityclass,re.abb regionabb,v.newPostTypeId posttypeid,re.sequence sequence, ";
+		$postQuery .="v.newCityId city from transfer_order_officer_view v left join regions re on v.newRegionId=re.id left join areas a ";
+		$postQuery .="on re.area=a.id left join cities c on v.newCityId=c.id where v.officer_id='$officerid' and v.newPostCode='$postcode' ";
+
+
+		$postResult = mysql_query($postQuery);
+        if(mysql_num_rows($postResult)>0)
+        {
+            while($row=mysql_fetch_array($postResult))
+            {
+                $postArray = $row[cityname] . "|" . $row[region] . "|" . $row[area] . "|" . $row[cityclass] . "|" . $row[regionabb] . "|" . $row[posttypeid] . "|" . $row[sequence] . "|" . $row[city];
+            }
+        }
+        else
+        {
+            $postArray = "";
+        }
+        return $postArray;
+    }
+
+
+/*
+     * Used In OptionsDAO.php for dummy-disposition.php
+     * created by kanika on 15.2.2010
+     * */
+    public function getPostingListByPostIdForDep($postid,$IsLastPosting='')
+    {
+        $postQuery = "select * from postings WHERE postid='$postid' AND postid not in
+				(select newpostCODE from transfer_ORDER_OFFICER_view
+				where newpostCODE ='$postid'  and status like 'RELIEVED' AND 	isCancelled!='1' and  orderStatus like 'Applied') ";
+        if($IsLastPosting != "")
+        {
+        	$postQuery = $postQuery." and islastposting = 1";
+        }
+       //echo  $postQuery;exit;
+        $postResult = mysql_query($postQuery);
+
+        $postArray = array();
+
+        // We find the fields number
+        $numfields=mysql_num_fields($postResult);
+
+        // Now we put the names of fields in a Array
+        for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($postResult, $i);
+        }
+
+        while($row=mysql_fetch_object($postResult))
+        {
+            $tempPostVO = new PostingVO();
+            //Finally we assign the new variables
+            for($i=0;$i<$numfields;$i++)
+            {
+                $tempPostVO->$fieldname[$i]=$row->$fieldname[$i];
+            }
+            $postArray[count($postArray)]= $tempPostVO;
+        }
+        return $postArray;
+    }
+
+    public function selectLastOfficersOnPostiId($postId)
+    {
+    	$query = "select civilCode, name from postings po join officers o on po.officerid=o.id and po.isLastPosting=1 and postid=\"$postId\" limit 0, 1";
+    	//echo $query;
+    	$officerResults = mysql_query($query);
+    	 $numfields=mysql_num_fields($officerResults);
+    	 $officerArray = array();
+     	for($i=0;$i<$numfields;$i++)
+        {
+            $fieldname[$i]=mysql_field_name($officerResults, $i);
+
+        }
+
+
+        while($row=mysql_fetch_object($officerResults))
+        {
+            $tempOfficerVO = new OfficerVO();
+
+
+                for($i=0;$i<$numfields;$i++)
+                {
+                    $tempOfficerVO->$fieldname[$i]=$row->$fieldname[$i];
+                }
+                $officerArray[count($officerArray)]= $tempOfficerVO;
+
+       }
+
+
+       return $officerArray;
+    }
+	
+	/* Create a function for Post Type Report */
+	
+	 public function getPostingForReport($post_type = '', $posting = '', $batch = '', $region = '', $report_type = '', $rank = ''){
+        
+		$cond = " 1 = 1 ";
+		
+		if($post_type != '') $cond .= " AND po.posttypeid = '".$post_type."' ";
+		
+		if($posting != '')	$cond .= " AND islastposting = '".$posting."' ";
+		
+		if($batch != '')	$cond .= " AND o.batch = '".$batch."' ";
+		
+		if($region != '') $cond .= " AND po.regionid = '".$region."' ";
+		
+		if($rank != '') $cond .= " AND po.rankid = '".$rank."' ";
+		
+		$query = "select o.civilCode,o.batch,o.name as officer_name,ps.*,po.* from postings as ps INNER JOIN posts as po ON ps.postid = po.code INNER JOIN officers as o ON ps.officerid = o.id WHERE ".$cond." order by ps.id desc" ;
+      
+		$result = mysql_query($query);
+
+        $arr = array();
+		
+		$numfields = mysql_num_fields($result);
+
+        for($i = 0; $i < $numfields; $i++ ){
+            
+			$fieldname[$i] = mysql_field_name($result, $i);
+        
+		}
+
+        while($row=mysql_fetch_object($result)){
+            
+			$tempPostVO = new PostingVO();
+            
+            for($i = 0; $i < $numfields; $i++ ){
+                
+				$tempPostVO->$fieldname[$i] = $row->$fieldname[$i];
+            
+			}
+            
+			$arr[count($arr)]= $tempPostVO;
+        }
+        return $arr;
+    }
+	
+	/* End Function */
+	
+	/* Create Function for Station Wise Report */
+	
+	public function getStationWiseReport($rank = '', $current_region = '', $current_city, $batch = '', $city = '', $region = '', $minimum_year = '', $maximum_year = '', $post_type = '', $sort_by = ''){
+        
+		$cond = " o.officerStatus = 5 "; $tmp_cond = '';
+		 
+		/* For Get Posting Rank 
+		if($rank != ''){
+
+			$tempGradesDAO = new GradesDAO();
+			
+			$grades = $tempGradesDAO->getGradesListForRank($rank); 
+			
+			$arr_val = array();
+			
+			foreach($grades as $val){
+			
+				$arr_val[] = $val->id;
+			
+			}
+			
+			$tmp_cond .= " AND gradeid IN ('".implode("','",$arr_val)."') ";
+			
+		}*/
+		
+		if($rank != '' && $rank != '-1') $cond .= " AND o.rankid = '".$rank."' ";
+		
+		if($current_city != "-1"){
+		
+			if($tmp_cond != ''){
+		
+				$cond .= " AND o.id IN(SELECT officerid FROM postings WHERE station = '".$current_city."' AND islastposting = 1 ".$tmp_cond.") ";
+			
+			} else {
+			
+				$cond .= " AND o.id IN(SELECT officerid FROM postings WHERE station = '".$current_city."' AND islastposting = 1) ";
+			
+			}
+		
+		} else if($current_region != ''){	
+			
+			$tempStationDAO = new CityDAO();
+			
+			$regionlist = array();
+			
+			$stations = $tempStationDAO->getRegionCityList($current_region);
+			
+			foreach($stations as $key => $val){
+			
+				$regionlist[] = $val->id;
+			
+			}
+			
+			//$cond .= " AND ps.station IN ('".implode("','",$regionlist)."') AND islastposting = 1  ";
+			
+			if($tmp_cond != ''){
+			
+				$cond .= " AND o.id IN(SELECT officerid FROM postings WHERE station IN ('".implode("','",$regionlist)."') AND islastposting = 1) ";
+				
+			} else {
+			
+				$cond .= " AND o.id IN(SELECT officerid FROM postings WHERE station IN ('".implode("','",$regionlist)."') AND islastposting = 1 ".$tmp_cond.") ";
+			
+			}
+			
+		}
+		
+		
+		if($batch != '')	$cond .= " AND o.batch = '".$batch."' ";
+		
+		if($city != '-1')  $cond .= " AND ps.station = '".$city."' ";
+			
+		if($region != '-1') {
+			
+			$tempStationDAO = new CityDAO();
+			
+			$regionlist = array();
+			
+			$stations = $tempStationDAO->getRegionCityList($region);
+			
+			foreach($stations as $key => $val){
+			
+				$regionlist[] = $val->id;
+			
+			}
+			
+			$cond .= " AND ps.station IN ('".implode("','",$regionlist)."') ";
+			
+		}
+		
+		
+		
+		//if($rank != '' && $rank != '-1') $cond .= " AND po.rankid = '".$rank."' ";
+		
+		if(!empty($post_type) && $post_type[0] != '') $cond .= " AND po.posttypeid IN ('".implode("','",$post_type)."') "; 
+		
+		$cond .= " group by ps.officerid ";
+		
+		$cond .= " HAVING 1 = 1 ";
+		
+		if($minimum_year != '-1') $cond .= " AND diff >= '".$minimum_year."' ";
+		
+		if($maximum_year != '-1') $cond .= " AND diff <= '".$maximum_year."' ";
+		
+		if($sort_by != '') { 
+		
+			if($sort_by == 1) $cond .= " order by o.civilCode asc"; 
+			
+			else if($sort_by == 2) $cond .= " order by diff desc "; 
+			
+			else if($sort_by == 3) $cond .= " order by diff asc"; 
+			
+		} else $cond .= " order by ps.id desc ";
+		
+		$query = "select o.rankid as rank,o.civilCode,o.batch,o.name as officer_name,ps.*,po.*,(SUM(DATEDIFF(( CASE islastposting WHEN '1' THEN CURDATE() ELSE toDate END ) ,ps.fromDate )  )/365) as diff from postings as ps INNER JOIN posts as po ON ps.postid = po.code INNER JOIN officers as o ON ps.officerid = o.id WHERE ".$cond."" ;
+    
+		$result = mysql_query($query) or die(mysql_error());
+
+        $arr = array();
+		
+		$numfields = mysql_num_fields($result);
+
+        for($i = 0; $i < $numfields; $i++ ){
+            
+			$fieldname[$i] = mysql_field_name($result, $i);
+        
+		}
+
+        while($row=mysql_fetch_object($result)){
+            
+			$tempPostVO = new PostingVO();
+            
+            for($i = 0; $i < $numfields; $i++ ){
+                
+				$tempPostVO->$fieldname[$i] = $row->$fieldname[$i];
+            
+			}
+            
+			$arr[count($arr)]= $tempPostVO;
+        }
+        return $arr;
+    }
+	
+	/* End Function */
+	
+	/* Get Current Posting by Officer */
+	
+	public function getCurrentPostingByOfficer($officer_id){
+		
+		$query = "SELECT newRegionId, newCityId as newStationId, newPostId, 'a',status FROM transfer_order_officer_view WHERE officer_id = '".$officer_id."' AND isCancelled = 0 ORDER BY id desc limit 1 " ;
+		
+		//$query = "(SELECT newRegionId, newCityId as newStationId, newPostId,orderDate as da, 'a','post' FROM transfer_order_officer_view WHERE officer_id = '".$officer_id."' AND status = 'NEW' ORDER BY id desc ) UNION (SELECT 'newRegionId', 'newCityId' as newStationId, 'newPostId' as off,fromdate as da,'a',postid as post FROM postings where islastposting = 1 AND officerid = '".$officer_id."') ORDER BY `da`  DESC limit 1 " ;
+		
+   
+		$result = mysql_query($query) or die(mysql_error());
+		$r = mysql_fetch_row($result);
+		//echo '<prE>';print_r($r);
+		if(mysql_num_rows($result) != 0 && $r[4] == 'NEW'){ 
+			
+			$postcode = mysql_fetch_row($result);
+			
+			return $r;
+		
+		} else{
+		
+			$query = "SELECT postid, fromDate, islastposting, 'b' FROM postings WHERE officerid = '".$officer_id."' AND islastposting = 4 ORDER BY id desc limit 1" ;
+    
+			$result = mysql_query($query) or die(mysql_error());
+		
+			if(mysql_num_rows($result) != 0){
+			
+				$postcode = mysql_fetch_row($result);
+			
+				return $postcode;
+		
+			} else{
+			
+				$query = "SELECT postid, fromDate, islastposting, 'c' FROM postings WHERE officerid = '".$officer_id."' AND islastposting = 1 ORDER BY id desc limit 1" ;
+    
+				$result = mysql_query($query) or die(mysql_error());
+			
+				if(mysql_num_rows($result) != 0){
+			
+					$postcode = mysql_fetch_row($result);
+			
+					return $postcode;
+		
+				} 
+			} 
+		}
+	}
+	
+	/* End Class */
+}
