@@ -1,0 +1,11 @@
+class-wp-posts-list-table.php
+class-wp-list-table.php
+
+        $pageNumberGet=@$_GET['paged'];
+        if($pageNumberGet<2){
+            $pageNumberGet=0;
+        }
+        $startCountNumber=($pageNumberGet*$this->_pagination_args['per_page']);
+        $itemCountNumber=$startCountNumber;
+
+/php5_6/ernet/website-160-demo/wp-admin/includes
