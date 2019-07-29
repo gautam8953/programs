@@ -1,0 +1,31 @@
+CREATE TABLE `mail_log` (
+  `id` int(11) NOT NULL,
+  `err` varchar(254) DEFAULT NULL,
+  `email_to` varchar(254) DEFAULT NULL,
+  `mail_sent` varchar(15) DEFAULT NULL,
+  `userid` int(11) DEFAULT NULL,
+  `msg_fun` varchar(254) DEFAULT NULL,
+  `msg` text,
+  `subject` varchar(254) DEFAULT NULL,
+  `created_date` datetime DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `mail_log`
+--
+ALTER TABLE `mail_log`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `mail_log`
+--
+ALTER TABLE `mail_log`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
