@@ -136,7 +136,7 @@
     });
 
 $('document').ready(function() {
-    get_data();
+    //get_data();
 });
 function resetpage() {
     var servername = '<?php echo base_url(); ?>';
@@ -160,7 +160,11 @@ function get_data(ths){
         params['country'] = $('#country').val();
         params['state'] = $('#state').val();
         params['city'] = $('#city').val();
-
+        if($(ths)){
+            if($(ths).prop('nodeName')=='A'){
+                params['page'] = $(ths).attr('data-href');
+            }
+        }
         $.ajax({
             url: '<?php echo base_url(); ?>index.php?c=searchlab&m=searchdata',
             data: params,
