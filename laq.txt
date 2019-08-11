@@ -1,0 +1,164 @@
+user model - 170
+                    if($result_set[0]->RoleName=='Facility'){
+                        $this->db->select('facilities.services,facilities.StateID,facilities.DistrictID');
+                        $this->db->from('usermapping');
+                        $this->db->join('facilities', 'usermapping.FacilityID=facilities.FacilityID AND usermapping.FacilityID>0', 'inner');        
+                        $this->db->where('usermapping.UserID',$result_set[0]->UserID);
+                        $queryServices = $this->db->get();
+                        $dataServices=$queryServices->row_array();
+                        // if login as facility save userID for future work
+                        $user_data['facilityUser']=$result_set[0]->UserID;
+                        $user_data['facilityServices']=$dataServices['services'];
+                        $user_data['facilityStateID']=$dataServices['StateID'];
+                        $user_data['facilityDistrictID']=$dataServices['DistrictID'];
+                    }
+APi user - 1490
+    function getstates(){
+        $response = array();
+        $dataHeader = apache_request_headers();
+        if (isset($dataHeader['device']) || isset($dataHeader['token'])) {
+            if ($this->input->method(true) == 'POST') {
+                if ($this->CommonModel->checkAppRequest($dataHeader)) {
+                    // get data and process api requrest
+                    $data = $this->CommonModel->getApiData();
+                    $response['data'] = $data;
+                    $response['code'] = '0';
+                    $response['msg'] = $this->config->item('errCodes')[0];
+                } else {
+                    $response['code'] = '5';
+                    $response['msg'] = $this->config->item('errCodes')[5];
+                }
+            } else {
+                $response['code'] = '8';
+                $response['msg'] = $this->config->item('errCodes')[8];
+            }
+        } else {
+            if ($this->input->method(true) == 'POST') {
+                if ($this->CommonModel->checkAPIWebUser()) {
+                    // get data and process web requrest
+                    $data=$this->input->post();
+                    if($this->session->userdata('RoleName')=='Facility'){
+                        $data['cond']=array('states.StateID'=>$this->session->userdata('facilityStateID'));
+                    }
+                    if($this->session->userdata('RoleName')=='State'){
+                        $data['cond']=array('states.StateID'=>$this->session->userdata('MappedState'));
+                    }
+                } else {
+                    redirect('/');
+                }
+            } else {
+                redirect('/');
+            }
+        }
+        $response=$this->CommonModel->getstates($data);
+        echo json_encode($response);
+        exit;        
+    }
+
+    public function getnindata_json(){
+        if ($this->CommonModel->checkAPIWebUser()) {
+            $data=$this->input->post();
+
+            if($this->session->userdata('RoleName')=='Facility'){
+                $data['cond']=array(
+                    'states.StateID'=>@$this->CommonModel->getstates(
+                        array('cond'=>array('states.StateID'=>$this->session->userdata('facilityStateID')))
+                    ),
+                    'states.StateID'=>@$this->CommonModel->getdistricts(
+                        array('cond'=>array('district.DistrictID'=>$this->session->userdata('facilityStateID')))
+                    ),
+                );
+            }
+            if($this->session->userdata('RoleName')=='State'){
+                $data['cond']=array('states.StateID'=>$this->session->userdata('MappedState'));
+            }
+
+            $dataRes=$this->CommonModel->getnindata_json($data);
+            $json_data=array(
+                "draw"              =>  intval($dataRes['draw']),
+                "recordsTotal"      =>  intval($dataRes['totalData']),
+                "recordsFiltered"   =>  intval($dataRes['totalFilter']),
+                "data"              =>  $dataRes['data']
+            );
+            echo json_encode($json_data);
+        } else {
+            $json_data=array(
+                "draw"              =>  0,
+                "recordsTotal"      =>  0,
+                "recordsFiltered"   =>  0,
+                "data"              =>  array()
+            );
+            echo json_encode($json_data);       
+        }
+        exit;
+    }
+
+
+common model - 3255
+
+    function getstates($data){
+        $respone=array();
+        $this->db->select('states.StateID,states.StateName');
+        $this->db->from('states');
+        if(!empty($data['cond'])){
+            foreach ($data['cond'] as $key => $value) {
+                $this->db->where($key,$value);
+            }
+        }
+        $this->db->where('states.IsActive','1');
+        $this->db->order_by('states.StateName');
+        $result = $this->db->get();
+        if($result->num_rows()>0){
+            $respone['data']=$result->result_array();
+            $respone['code']='0';
+            $respone['msg']=$this->config->item('errCodes')[0];
+        } else {
+            $respone['code']='13';
+            $respone['data']=array();
+            $respone['msg']=$this->config->item('errCodes')[13];
+        }
+        return $respone;
+    }
+    function getdistricts($data){
+        $respone=array();
+        $this->db->select('district.DistrictID,district.DistrictName,states.StateName,CONCAT(states.StateID,"_",district.DistrictID) AS DistrictVal');
+        $this->db->from('district');
+        $this->db->join('states', 'states.StateID = district.StateID AND states.IsActive="1"', 'inner');
+        if(is_array($data['search_state'])){
+            if(!in_array('99999', $data['search_state'])){
+                $this->db->where_in('district.StateID',$data['search_state']);
+            }           
+        } else {
+            if(!empty($data['search_state'])){
+                $this->db->where('district.StateID',$data['search_state']);             
+            }
+        }
+        $this->db->where('district.IsActive','1');
+        if(!empty($data['cond'])){
+            foreach ($data['cond'] as $key => $value) {
+                $this->db->where($key,$value);
+            }
+        }
+        //$this->db->order_by('states.StateName','ASC');
+        $this->db->order_by('district.DistrictName','ASC');
+        $result = $this->db->get();
+        if($result->num_rows()>0){
+            $respone['data']=$result->result_array();
+            $respone['code']='0';
+            $respone['msg']=$this->config->item('errCodes')[0];
+        } else {
+            $respone['code']='13';
+            $respone['data']=array();
+            $respone['msg']=$this->config->item('errCodes')[13];
+        }
+        return $respone;
+    }
+
+
+get_nindata_json
+
+        if(!empty($data['cond'])){
+            foreach ($data['cond'] as $key => $value) {
+                $url.='&'.$key.'='.urlencode(trim($value));
+            }
+        }
